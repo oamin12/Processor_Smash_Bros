@@ -1,11 +1,6 @@
-
-DrawRectangleReg MACRO x,y ;x y top left corner of the drawn rectangle
+DrawRec MACRO x,y ;x y top left corner of the drawn rectangle
     local loop1,loop2
      
-  mov ah,0
-  mov al,13h
-  int 10h
-  
   
   mov cx,x
   mov dx,y
@@ -13,14 +8,14 @@ DrawRectangleReg MACRO x,y ;x y top left corner of the drawn rectangle
   
   mov al,0Fh
   mov ah,0ch
-  mov bx,25
+  mov bx,20
   
   
   loop1:
   int 10h
-  add cx,50
+  add cx,40
   int 10h
-  sub cx,50
+  sub cx,40
   inc dx
   dec bx
   cmp bx,0
@@ -29,14 +24,14 @@ DrawRectangleReg MACRO x,y ;x y top left corner of the drawn rectangle
     
   mov cx,x
   mov dx,y
-  mov bx,50
+  mov bx,40
   
   
   loop2:
   int 10h
-  add dx,25
+  add dx,20
   int 10h
-  sub dx,25
+  sub dx,20
   inc cx
   dec bx
   cmp bx,0
