@@ -8,14 +8,14 @@ DrawRec MACRO x,y ;x y top left corner of the drawn rectangle
   
   mov al,0Fh
   mov ah,0ch
-  mov bx,20
+  mov bx,40 ;length
   
   
   loop1:
   int 10h
-  add cx,40
+  add cx,60
   int 10h
-  sub cx,40
+  sub cx,60
   inc dx
   dec bx
   cmp bx,0
@@ -24,14 +24,14 @@ DrawRec MACRO x,y ;x y top left corner of the drawn rectangle
     
   mov cx,x
   mov dx,y
-  mov bx,40
+  mov bx,60 ;width
   
   
   loop2:
   int 10h
-  add dx,20
+  add dx,40
   int 10h
-  sub dx,20
+  sub dx,40
   inc cx
   dec bx
   cmp bx,0
