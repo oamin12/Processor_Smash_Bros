@@ -1,7 +1,9 @@
 include DrawRec.inc
 include DrawDS.inc
+include Drawbtn.inc
 include P1regs.inc
 include P2regs.inc
+
 .model small
 .data
 xr dw ?
@@ -63,7 +65,7 @@ main proc far
 
 
     ;Drawing Data Segment
-    
+    DrawCommandRow
 
     ;Drawing Registers
     P1regs
