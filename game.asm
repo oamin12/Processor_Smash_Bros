@@ -44,11 +44,11 @@ main proc far
     loop1: ;split screen into 2 players' screen
     int 10h
     inc dx
-    cmp dx,200
+    cmp dx,230 ;joe
     jnz loop1
 
     mov cx,0  ;split for bottons bel 3ard
-    mov dx,200
+    mov dx,230  ;joe
     loop2:
     int 10h
     inc cx

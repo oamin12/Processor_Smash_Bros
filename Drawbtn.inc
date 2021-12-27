@@ -43,84 +43,84 @@ ENDM Drawbtn
 DrawCommandRow MACRO  ;x y top left corner of the drawn rectangle
      
     mov xr,5d
-    mov yr,205
+    mov yr,235
     Drawbtncommand xr,yr
 
     mov xr,69d
-    mov yr,205
+    mov yr,235
     Drawbtncommand xr,yr
 
     mov xr,133d
-    mov yr,205
+    mov yr,235
     Drawbtncommand xr,yr
 
     mov xr,197d
-    mov yr,205
+    mov yr,235
     Drawbtncommand xr,yr
 
     mov xr,261d
-    mov yr,205
+    mov yr,235
     Drawbtncommand xr,yr
 
     mov xr,325d
-    mov yr,205
+    mov yr,235
     Drawbtncommand xr,yr
 
     mov xr,389d
-    mov yr,205
+    mov yr,235
     Drawbtncommand xr,yr
 
     mov xr,453d
-    mov yr,205
+    mov yr,235
     Drawbtncommand xr,yr
 
     mov xr,517d
-    mov yr,205
+    mov yr,235
     Drawbtncommand xr,yr
 
     mov xr,581d
-    mov yr,205
+    mov yr,235
     Drawbtncommand xr,yr
 ;-------------------------------------------------------------
 
    mov xr,5d
-    mov yr,235
+    mov yr,265
     Drawbtncommand xr,yr
 
     mov xr,69d
-    mov yr,235
+    mov yr,265
     Drawbtncommand xr,yr
 
     mov xr,133d
-    mov yr,235
+    mov yr,265
     Drawbtncommand xr,yr
 
     mov xr,197d
-    mov yr,235
+    mov yr,265
     Drawbtncommand xr,yr
 
     mov xr,261d
-    mov yr,235
+    mov yr,265
     Drawbtncommand xr,yr
 
     mov xr,325d
-    mov yr,235
+    mov yr,265
     Drawbtncommand xr,yr
 
     mov xr,389d
-    mov yr,235
+    mov yr,265
     Drawbtncommand xr,yr
 
     mov xr,453d
-    mov yr,235
+    mov yr,265
     Drawbtncommand xr,yr
 
     mov xr,517d
-    mov yr,235
+    mov yr,265
     Drawbtncommand xr,yr
 
     mov xr,581d
-    mov yr,235
+    mov yr,265
     Drawbtncommand xr,yr
 
     

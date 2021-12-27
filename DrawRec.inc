@@ -6,9 +6,9 @@ DrawRec MACRO x,y ;x y top left corner of the drawn rectangle
   mov dx,y
   
   
-  mov al,0Fh
+  mov al,08h
   mov ah,0ch
-  mov bx,40 ;length
+  mov bx,25 ;length  ;joe old 40
   
   
   loop1:
@@ -29,9 +29,9 @@ DrawRec MACRO x,y ;x y top left corner of the drawn rectangle
   
   loop2:
   int 10h
-  add dx,40
+  add dx,25   ;joe old 40
   int 10h
-  sub dx,40
+  sub dx,25   ;joe old 40
   inc cx
   dec bx
   cmp bx,0
