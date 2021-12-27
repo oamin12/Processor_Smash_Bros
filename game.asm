@@ -12,6 +12,7 @@ yr dw ?
 x db ?
 y db ?
 
+;Registers labels
 Lax db "AX$"
 Lbx db "BX$"
 Lcx db "CX$"
@@ -20,9 +21,34 @@ Lsi db "SI$"
 Ldi db "DI$"
 Lsp db "SP$"
 Lbp db "BP$"
+Lah db "AH$"
+Lal db "AL$"
+Lbh db "BH$"
+Lbl db "BL$"
 db "$$$"
 trycatch db "0000$"
 
+;command buttons lables
+Ladd  db "ADD$"
+Ladc  db "ADC$"
+Lsub  db "SUB$"
+Lsbb  db "SBB$"
+Ldiv  db "DIV$"
+Lmul  db "MUL$"
+Lxor  db "XOR$"
+Land  db "AND$"
+Lor   db "OR$"
+Lnop  db "NOP$";---------new_row----------
+Lshr  db "SHR$"
+Lshl  db "SHL$"
+Lsar  db "SAR$"
+Linc  db "INC$"
+Ldec  db "DEC$"
+Lclc  db "CLC$"
+Lidiv db "IDIV$"
+Limul db "IMUL$"
+Lror  db "ROR$"
+Lrol  db "ROL$"
 
 
 .code
@@ -64,8 +90,9 @@ main proc far
     jnz loop33
 
 
-    ;Drawing Data Segment
+    ;Drawing Commands buttons
     DrawCommandRow
+    DrawAddressingRow
 
     ;Drawing Registers
     P1regs
