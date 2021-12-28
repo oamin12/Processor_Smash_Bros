@@ -41,7 +41,16 @@ Drawbtncommand MACRO x,y ;x y top left corner of the drawn rectangle
 ENDM Drawbtn
 
 DrawCommandRow MACRO  ;x y top left corner of the drawn rectangle
-     
+
+    ;clearing buttons area
+    mov ax,0600h
+    mov bh,0
+    mov cl,0  ;x1
+    mov ch,17 ;y1
+    mov dl,80 ;x2
+    mov dh,20 ;y2
+    int 10h
+
     mov xr,5d
     mov yr,235
     Drawbtncommand xr,yr
@@ -290,6 +299,100 @@ ENDM DrawCommandRow
 
 
  DrawAddressingRow MACRO 
+
+  
+    ;clearing buttons area
+    mov ax,0600h
+    mov bh,0
+    mov cl,0  ;x1
+    mov ch,17 ;y1
+    mov dl,80 ;x2
+    mov dh,20 ;y2
+    int 10h
+
+    mov xr,5d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,69d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,133d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,197d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,261d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,325d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,389d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,453d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,517d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,581d
+    mov yr,235
+    Drawbtncommand xr,yr
+;-------------------------------------------------------------
+
+   mov xr,5d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,69d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,133d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,197d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,261d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,325d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,389d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,453d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,517d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,581d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+
+
   ;Labels
     mov ah,2
     mov dl,3
@@ -352,7 +455,7 @@ ENDM DrawCommandRow
     mov dh,17
     int 10h  
     mov ah,9
-    mov dx,offset Lah
+    mov dx,offset Lbp
     int 21h
 
     mov ah,2
@@ -360,7 +463,7 @@ ENDM DrawCommandRow
     mov dh,17
     int 10h  
     mov ah,9
-    mov dx,offset Lal
+    mov dx,offset Lah
     int 21h
 
     mov ah,2
@@ -368,17 +471,17 @@ ENDM DrawCommandRow
     mov dh,17
     int 10h  
     mov ah,9
-    mov dx,offset Lbh
+    mov dx,offset Lal
     int 21h
 
     ;--------------new_row---------------
-    
+
     mov ah,2
     mov dl,3
     mov dh,19
     int 10h  
     mov ah,9
-    mov dx,offset Lshr
+    mov dx,offset Lbh
     int 21h
 
     mov ah,2
@@ -386,7 +489,7 @@ ENDM DrawCommandRow
     mov dh,19
     int 10h  
     mov ah,9
-    mov dx,offset Lshl
+    mov dx,offset Lbl
     int 21h
 
     mov ah,2
@@ -394,7 +497,7 @@ ENDM DrawCommandRow
     mov dh,19
     int 10h  
     mov ah,9
-    mov dx,offset Lsar
+    mov dx,offset Lch
     int 21h
 
     mov ah,2
@@ -402,7 +505,7 @@ ENDM DrawCommandRow
     mov dh,19
     int 10h  
     mov ah,9
-    mov dx,offset Linc
+    mov dx,offset Lcl
     int 21h
 
     mov ah,2
@@ -410,7 +513,7 @@ ENDM DrawCommandRow
     mov dh,19
     int 10h  
     mov ah,9
-    mov dx,offset Ldec
+    mov dx,offset Ldh
     int 21h
 
     mov ah,2
@@ -418,15 +521,15 @@ ENDM DrawCommandRow
     mov dh,19
     int 10h  
     mov ah,9
-    mov dx,offset Lclc
+    mov dx,offset Ldl
     int 21h
 
     mov ah,2
-    mov dl,51
+    mov dl,50
     mov dh,19
     int 10h  
     mov ah,9
-    mov dx,offset Lidiv
+    mov dx,offset Limd_adr
     int 21h
 
     mov ah,2
@@ -434,23 +537,23 @@ ENDM DrawCommandRow
     mov dh,19
     int 10h  
     mov ah,9
-    mov dx,offset Limul
+    mov dx,offset Ldir_adr
     int 21h
 
     mov ah,2
-    mov dl,67
+    mov dl,66
     mov dh,19
     int 10h  
     mov ah,9
-    mov dx,offset Lror
+    mov dx,offset Lind_adr
     int 21h
 
     mov ah,2
-    mov dl,75
+    mov dl,73
     mov dh,19
     int 10h  
     mov ah,9
-    mov dx,offset Lrol
+    mov dx,offset Lbas_adr
     int 21h
 ENDM DrawAddressingRow
 
