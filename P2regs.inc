@@ -87,4 +87,72 @@ P2regs MACRO
     mov ah,9
     mov dx,offset Lbp
     int 21h
+
+    ;Resgisters values-----------------
+
+    mov ah,2
+    mov dl,49   ;X-position
+    mov dh,2    ;Y-position
+    int 10h      
+    mov ah,9
+    mov dx,offset P2_regs[0]
+    int 21h
+
+    mov ah,2
+    mov dl,49   ;X-position
+    mov dh,4    ;Y-position
+    int 10h  
+    mov ah,9
+    mov dx,offset P2_regs[5]
+    int 21h
+
+    mov ah,2
+    mov dl,49   ;X-position
+    mov dh,6    ;Y-position
+    int 10h  
+    mov ah,9
+    mov dx,offset P2_regs[10]
+    int 21h
+
+
+    mov ah,2
+    mov dl,49   ;X-position
+    mov dh,8    ;Y-position
+    int 10h  
+    mov ah,9
+    mov dx,offset P2_regs[15]
+    int 21h
+
+    mov ah,2
+    mov dl,57   ;X-position
+    mov dh,2    ;Y-position
+    int 10h  
+    mov ah,9
+    mov dx,offset P2_regs[20]
+    int 21h
+
+    mov ah,2
+    mov dl,57   ;X-position
+    mov dh,4    ;Y-position
+    int 10h  
+    mov ah,9
+    mov dx,offset P2_regs[25]
+    int 21h
+    
+    mov ah,2
+    mov dl,57   ;X-position
+    mov dh,6    ;Y-position
+    int 10h  
+    mov ah,9
+    mov dx,offset P2_regs[30]
+    int 21h
+
+    mov ah,2
+    mov dl,57   ;X-position
+    mov dh,8    ;Y-position
+    int 10h  
+    mov ah,9
+    mov dx,offset P2_regs[35]
+    int 21h
+
 ENDM P2regs

@@ -3,8 +3,11 @@ include DrawDS.inc
 include Drawbtn.inc
 include P1regs.inc
 include P2regs.inc
+include CMDs.inc
 
 .model small
+.386
+.stack 64
 .data
 xr dw ?
 yr dw ?
@@ -13,7 +16,16 @@ x db ?
 y db ?
 
 ;command
-btn_num dw ?
+btn_num           dw ?
+num_placeholder   db "0000$"
+zeros_placeholder db "0000$"
+Player_turn       db 1
+Player_num        db ? ; used to know which player register will change
+RegToBeUpdated    db ? ; register number that will be updated for the player
+
+;commands operands
+operand1 db ?
+operand2 db ?
 
 ;Registers labels--------------------
 Lax      db "AX$"
@@ -36,6 +48,12 @@ Limd_adr db "VAL$"
 Ldir_adr db "[VL]$"
 Lind_adr db "[BX]$"
 Lbas_adr db "[BX+V]$"
+
+;Registers values---------------------
+;           AX[0]   BX[5]   CX[10]  DX[15]  SI[20]  DI[25]  SP[30]  BP[35]
+P1_regs db "0000$","0000$","0000$","0000$","0000$","0000$","0000$","0000$"
+P2_regs db "0000$","0000$","0000$","0000$","0000$","0000$","0000$","0000$"
+
 
 db "$$$"
 trycatch db "0000$"
@@ -68,6 +86,7 @@ main proc far
     
     mov ax,@data
     mov ds,ax
+    mov es,ax ;to be able to use string operations
      
     mov ah,0
     mov al,10h  ;;10h 640x350
@@ -106,6 +125,7 @@ main proc far
     DrawAddressingRow
 
     ;Drawing Registers
+    
     P1regs
     P2regs
     DrawDS
@@ -114,10 +134,28 @@ main proc far
     mov ax,1
     int 33h
 
-    call Getbtnclicked   
+    GameLoop:
+   
+
+    call Getbtnclicked
+
+    mov ah,0afh
+    mov RegToBeUpdated,9h
+    mov Player_num,2h
+    UpdateRegValue Player_num, RegToBeUpdated ;new value have to be in AX if 16 bits
+                                              ;new value have to be in AH if  8 bits
+    
+    P1regs
+    P2regs
+
+
+    jmp GameLoop   
 
     ;hlt
 main endp
+
+
+
 
 Getbtnclicked proc near
 
@@ -162,6 +200,7 @@ Getbtnclicked proc near
     mov btn_num,ax
     ret
 Getbtnclicked endp
+
 
 end main
 
