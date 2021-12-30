@@ -1,20 +1,29 @@
 include DrawRec.inc
+include DrawCir.inc 
 include DrawDS.inc
 include Drawbtn.inc
 include P1regs.inc
 include P2regs.inc
-
 .model small
+.386
+.stack 64
 .data
 xr dw ?
 yr dw ?
-
+ 
 x db ?
 y db ?
-
+;;circle related variables
+xcm dw ? ;circle midpoint
+ycm dw ? ;circle midpoint
+xc dw 0
+yc dw 0
+r dw ?
+p dw 0
+clr db ?
 ;command
 btn_num dw ?
-
+ 
 ;Registers labels--------------------
 Lax      db "AX$"
 Lbx      db "BX$"
@@ -36,10 +45,10 @@ Limd_adr db "VAL$"
 Ldir_adr db "[VL]$"
 Lind_adr db "[BX]$"
 Lbas_adr db "[BX+V]$"
-
+ 
 db "$$$"
 trycatch db "0000$"
-
+ 
 ;command buttons lables------------------
 Ladd  db "ADD$"
 Ladc  db "ADC$"
@@ -61,18 +70,23 @@ Lidiv db "IDIV$"
 Limul db "IMUL$"
 Lror  db "ROR$"
 Lrol  db "ROL$"
+tes  db "testbtn$"
 
 .code
 
 main proc far
-    
-    mov ax,@data
+ 
+   mov ax,@data
     mov ds,ax
      
     mov ah,0
     mov al,10h  ;;10h 640x350
     int 10h
-
+    ; mov ax,0600h ;benkhaly el shasha white
+    ; mov bh,0fh
+    ; mov cx,0
+    ; mov dx,184FH
+    ; int 10h
     mov al,03h
     mov ah,0ch
 
@@ -103,65 +117,94 @@ main proc far
 
     ;Drawing Commands buttons
     DrawCommandRow
-    DrawAddressingRow
+    ;DrawAddressingRow
 
     ;Drawing Registers
     P1regs
     P2regs
     DrawDS
 
+
+    mov xcm,90
+    mov ycm,170
+    mov r,10
+    mov clr,0fh
+    DrawCir xcm,ycm,xc,yc,p,r,clr
+     add xcm,40
+    
+     mov clr,4
+     DrawCir xcm,ycm,xc,yc,p,r,clr
+     add xcm,40
+     mov clr,0ah
+     DrawCir xcm,ycm,xc,yc,p,r,clr
+    add xcm,40
+    tryfill:
+     DrawCir xcm,ycm,xc,yc,p,r,04h
+    dec r
+    cmp r,0
+    jnz tryfill
     ;showing mouse
     mov ax,1
     int 33h
 
-    call Getbtnclicked   
+    call Getbtnclicked
+     cmp ax,0ffffh
+     jne alo
+     jmp meshalo
+     alo:
+     DrawAddressingRow
+     meshalo:
+     mov ah,0
+     int 16h
 
-    ;hlt
+
+    hlt
 main endp
-
+ 
 Getbtnclicked proc near
-
+ 
     noleftclick:
             mov ax,0003h
             int 33h ;CX(X), DX(Y)
             test bx,1
             jz noleftclick ;break if user clicked the left click
-
+ 
     mov bx,dx
     mov dx,0
     mov ax,cx
     mov cx,64 ;58 is the btn width
     div cx    ;integer division
-
+ 
     cmp bx,230
     ja under
-
+ 
     mov ax,0ffffh
     jmp exit
-
+ 
     under:
         cmp bx,265
         jb row_0
-        
+ 
         cmp bx,300
         jb row_10
-
+ 
         mov ax,0ffffh
         jmp exit
-
+ 
         row_0:
             add ax,0
             jmp exit
-
+ 
         row_10:
             add ax,10d
-
-
+ 
+ 
     exit:
-
+ 
     mov btn_num,ax
     ret
 Getbtnclicked endp
 
-end main
 
+ 
+end main
