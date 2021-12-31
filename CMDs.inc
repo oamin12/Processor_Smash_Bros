@@ -206,7 +206,7 @@ UpdateRegValue MACRO p_num, reg_num
     jz reg_BX_p1
 
     cmp reg_num,2
-    jz reg_CX_P1
+    jz reg_CX_p1
 
     cmp reg_num,3
     jz reg_DX_p1
@@ -223,7 +223,7 @@ UpdateRegValue MACRO p_num, reg_num
     cmp reg_num,7
     jz reg_BP_p1
 
-    reg_AX_P1:
+    reg_AX_p1:
     mov di,offset P1_regs
     rep movsb   
     jmp exit_updt

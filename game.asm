@@ -37,8 +37,6 @@ RegToBeUpdated    db ? ; register number that will be updated for the player
 operand1 db ?
 operand2 db ?
 
-
-btn_num dw ?
  
 
 ;Registers labels--------------------
