@@ -1,5 +1,5 @@
 Convrt_Hex_String MACRO 
-local myloop,continue_convrt,exit_convrt,letter
+local myloop,continue_convrt,exit_convrt,letter,continue,bit_0,bit_1,bit_2,bit_3
 ;output string will be in  num_placeholder variable
 mov cl,0d
 mov bx, 10h
@@ -72,7 +72,7 @@ ENDM ResetPlaceholder
 
 
 convrt_string_hex MACRO STR,mode 
-    local exit,letter1,letter2,letter3,letter4,continue,continue2,continue3,continue4
+    local exit,letter1,letter2,letter3,letter4,continue1,continue2,continue3,continue4
     ;Starting from least to most significant digits
     ;mn el yemeen L el shemal ya fala7een ya3ny
     
@@ -184,7 +184,7 @@ ENDM convrt_string_hex
 
 
 UpdateRegValue MACRO p_num, reg_num
-    
+    Local reg_AX_p1, reg_BX_p1,reg_CX_p1,reg_DX_p1,reg_SI_p1,reg_DI_p1,reg_SP_p1,reg_BP_p1,Reg_byte_player1,reg_AH_p1,reg_AL_p1,reg_BH_p1,reg_BL_p1,reg_CH_p1,reg_CL_p1,reg_DH_p1,reg_DL_p1,PLAYER_2_REGS,reg_AX_p2,reg_BX_p2,reg_CX_p2,reg_DX_p2,reg_SI_p2,reg_DI_p2,reg_SP_p2,reg_BP_p2,Reg_byte_player2,reg_AH_p2,reg_AL_p2,reg_BH_p2,reg_BL_p2,reg_CH_p2,reg_CL_p2,reg_DH_p2,reg_DL_p2,exit_updt
    
     Convrt_Hex_String ;takes the new value from AX and converts it to string in num_placeholder variable
     
@@ -206,7 +206,7 @@ UpdateRegValue MACRO p_num, reg_num
     jz reg_BX_p1
 
     cmp reg_num,2
-    jz reg_CX_P1
+    jz reg_CX_p1
 
     cmp reg_num,3
     jz reg_DX_p1
@@ -223,7 +223,7 @@ UpdateRegValue MACRO p_num, reg_num
     cmp reg_num,7
     jz reg_BP_p1
 
-    reg_AX_P1:
+    reg_AX_p1:
     mov di,offset P1_regs
     rep movsb   
     jmp exit_updt

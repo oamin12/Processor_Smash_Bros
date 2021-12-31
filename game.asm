@@ -5,6 +5,8 @@ include Drawbtn.inc
 include P1regs.inc
 include P2regs.inc
 include CMDs.inc
+include BtnAct.inc
+include AddOp.inc
 
 
 .model small
@@ -29,16 +31,15 @@ clr db ?
 btn_num           dw ?
 num_placeholder   db "0000$"
 zeros_placeholder db "0000$"
-Player_turn       db 1
+Player_turn       dw 2    ;1-> change player 2 registers,  2-> change player 1 registers
 Player_num        db ? ; used to know which player register will change
 RegToBeUpdated    db ? ; register number that will be updated for the player
 
 ;commands operands
-operand1 db ?
-operand2 db ?
+operand1 dw ?
+operand2 dw ?
+result   dw ?
 
-
-btn_num dw ?
  
 
 ;Registers labels--------------------
@@ -66,8 +67,8 @@ Lbas_adr db "[BX+V]$"
 
 ;Registers values---------------------
 ;           AX[0]   BX[5]   CX[10]  DX[15]  SI[20]  DI[25]  SP[30]  BP[35]
-P1_regs db "0000$","0000$","0000$","0000$","0000$","0000$","0000$","0000$"
-P2_regs db "0000$","0000$","0000$","0000$","0000$","0000$","0000$","0000$"
+P1_regs db "0016$","0001$","0000$","0000$","0000$","0000$","0000$","0000$"
+P2_regs db "0002$","0000$","0000$","0000$","0000$","0000$","0000$","0000$"
 
 
 
@@ -96,6 +97,7 @@ Limul db "IMUL$"
 Lror  db "ROR$"
 Lrol  db "ROL$"
 tes  db "testbtn$"
+mode db 1
 
 .code
 
@@ -140,7 +142,7 @@ main proc far
     cmp cx,640
     jnz loop33
 
-
+    Start_Again:
     ;Drawing Commands buttons
     DrawCommandRow
     ;DrawAddressingRow
@@ -179,11 +181,16 @@ main proc far
    
 
     call Getbtnclicked
-
-    mov ah,0afh
-    mov RegToBeUpdated,9h
-    mov Player_num,2h
-    UpdateRegValue Player_num, RegToBeUpdated ;new value have to be in AX if 16 bits
+    cmp ax, 0ffffh
+    jnz RegAddMenu 
+    jz GameLoop
+    RegAddMenu:
+    BtnAct  
+    jmp Start_Again
+    ; mov ah,0afh
+    ; mov RegToBeUpdated,9h
+    ; mov Player_num,2h
+    ; UpdateRegValue Player_num, RegToBeUpdated ;new value have to be in AX if 16 bits
                                               ;new value have to be in AH if  8 bits
     
     P1regs
@@ -192,15 +199,15 @@ main proc far
 
     jmp GameLoop   
 
-    call Getbtnclicked
-     cmp ax,0ffffh
-     jne alo
-     jmp meshalo
-     alo:
-     DrawAddressingRow
-     meshalo:
-     mov ah,0
-     int 16h
+    ; call Getbtnclicked
+    ;  cmp ax,0ffffh
+    ;  jne alo
+    ;  jmp meshalo
+    ;  alo:
+    ;  DrawAddressingRow
+    ;  meshalo:
+    ;  mov ah,0
+    ;  int 16h
 
 
 
@@ -216,6 +223,7 @@ Getbtnclicked proc near
             mov ax,0003h
             int 33h ;CX(X), DX(Y)
             test bx,1
+            hlt
             jz noleftclick ;break if user clicked the left click
  
     mov bx,dx
