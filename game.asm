@@ -1,14 +1,19 @@
-include Drawgrd.inc
 include DrawRec.inc
-include DrawCir.inc 
+include DrawCir.inc
+include DrawFcr.inc 
 include DrawDS.inc
 include Drawbtn.inc
 include P1regs.inc
 include P2regs.inc
+include Drawgrd.inc
+include Gun.inc
+include Gun2.inc
+include DrawTri.inc
+include DrawObj.inc
 include CMDs.inc
+include BtnAct.inc
+include AddOp.inc
 include Valid.inc
-
-
 .model small
 .386
 .stack 64
@@ -23,25 +28,31 @@ xcm dw ? ;circle midpoint
 ycm dw ? ;circle midpoint
 xc dw 0
 yc dw 0
-r dw ?
+r dw 5
 p dw 0
 clr db ?
+;triangle coordinates
+x1 dw ?
+y1 dw ?
+;Object Coordinates
+xo dw ?
+yo dw ?
+ro dw 10
+clro db ?
+
 ;command
 
 btn_num           dw ?
 num_placeholder   db "0000$"
 zeros_placeholder db "0000$"
-Player_turn       db 1
+Player_turn       dw 1
 Player_num        db ? ; used to know which player register will change
 RegToBeUpdated    db ? ; register number that will be updated for the player
 
 ;commands operands
-operand1 db ?
-operand2 db ?
-
-
- 
-
+operand1 dw ?
+operand2 dw ?
+mode db 1 
 ;Registers labels--------------------
 Lax      db "AX$"
 Lbx      db "BX$"
@@ -64,12 +75,20 @@ Ldir_adr db "[VL]$"
 Lind_adr db "[BX]$"
 Lbas_adr db "[BX+V]$"
 
-
+;;Falling Objects Data
+LFallObjY1 db '0$'
+LFallObjR1 db '0$'
+LFallObjG1 db '0$'
+LFallObjP1 db '0$'
+LFallObjY2 db '0$'
+LFallObjR2 db '0$'
+LFallObjG2 db '0$'
+LFallObjP2 db '0$'
+NumPos db ?
 ;Registers values---------------------
 ;           AX[0]   BX[5]   CX[10]  DX[15]  SI[20]  DI[25]  SP[30]  BP[35]
 P1_regs db "0000$","0000$","0000$","0000$","0000$","0000$","0000$","0000$"
 P2_regs db "0000$","0000$","0000$","0000$","0000$","0000$","0000$","0000$"
-
 
 
 db "$$$"
@@ -96,73 +115,63 @@ Lidiv db "IDIV$"
 Limul db "IMUL$"
 Lror  db "ROR$"
 Lrol  db "ROL$"
-tes  db "testbtn$"
-
-
+tes   db "testbtn$"
 ;User string-------------------
 ReadUserSTR                db 5,?,5 dup('0'),'0'
 ReadUserSTR_type           db ?
 ReadUserSTR_syntaxErroFlag db 0  ;0 for no error, 1 for error, RESET FOR USER AFTER HIS TURN HAS ENDED
 Valid_input                db '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
 
-
 .code
 
 main proc far
  
-    mov ax,@data
+   mov ax,@data
     mov ds,ax
-    mov es,ax ;to be able to use string operations
-     
+    mov es,ax 
     mov ah,0
     mov al,10h  ;;10h 640x350
     int 10h
     
-
     ;Drawing lines(grid)
     Drawgrd
-
-
     ;Drawing Commands buttons
     DrawCommandRow
     ;DrawAddressingRow
 
     ;Drawing Registers
-    
     P1regs
     P2regs
     DrawDS
-
-
-    mov xcm,90
-    mov ycm,170
-    mov r,10
-    mov clr,0fh
-    DrawCir xcm,ycm,xc,yc,p,r,clr
-     add xcm,40
     
-     mov clr,4
-     DrawCir xcm,ycm,xc,yc,p,r,clr
-     add xcm,40
-     mov clr,0ah
-     DrawCir xcm,ycm,xc,yc,p,r,clr
-    add xcm,40
-    tryfill:
-     DrawCir xcm,ycm,xc,yc,p,r,04h
-    dec r
-    cmp r,0
-    jnz tryfill
-    ;showing mouse
-    mov ax,1
-    int 33h
 
-
-    GameLoop:;============================================
+    mov x1,120
+    mov y1,180
+    Gun x1, y1
+    mov x1,440
+    mov y1,180
+    Gun2 x1, y1
+    
+    
+    Drawgrd
+    P1regs
+    P2regs
+    DrawCommandRow
+    mov xcm,60
+    mov NumPos,7
+    DrawObj1 xcm,NumPos
+    mov xcm,380
+    mov NumPos,47
+    DrawObj2 xcm,NumPos
+   
+    P1regs
+    P2regs
+    GameLoop1:;============================================
    
 
     call Getbtnclicked
    
-    call GetNumFromUser
+    call GetNumFromUser ; Value returns in CX ALways 'Must be edited'
      
     mov ax,cx
     mov RegToBeUpdated,2h
@@ -176,26 +185,36 @@ main proc far
 
 
     mov ReadUserSTR_syntaxErroFlag,0
-    jmp GameLoop;======================================   
-
-    ;call Getbtnclicked
-     ;cmp ax,0ffffh
-     ;jne alo
-     ;jmp meshalo
-     ;alo:
-     ;DrawAddressingRow
-     ;meshalo:
-     ;mov ah,0
-     ;int 16h
+    jmp GameLoop1;======================================   
 
 
+    GameLoop: 
+    
+    ;showing mouse
+    mov ax,1
+    int 33h
+    call Getbtnclicked
+    ;cmp ax, 0ffffh
+    ;jnz RegAddMenu 
+    ;jz GameLoop
+    ;RegAddMenu:
 
+    ;BtnAct
+
+    call Getbtnclicked
+     cmp ax,0ffffh
+     jne alo
+     jmp meshalo
+     alo:
+     DrawAddressingRow
+     meshalo:
+     mov ah,0
+     int 16h
 
 
     hlt
 main endp
  
-
 Getbtnclicked proc near
  
     noleftclick:
@@ -325,7 +344,5 @@ GetNumFromUser proc near
     
     ret
 GetNumFromUser endp
-
+ 
 end main
-
-
