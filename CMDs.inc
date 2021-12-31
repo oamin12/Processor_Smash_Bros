@@ -72,7 +72,7 @@ ENDM ResetPlaceholder
 
 
 convrt_string_hex MACRO STR,mode 
-    local exit,letter1,letter2,letter3,letter4,continue,continue2,continue3,continue4
+    local exit,letter1,letter2,letter3,letter4,continue1,continue2,continue3,continue4
     ;Starting from least to most significant digits
     ;mn el yemeen L el shemal ya fala7een ya3ny
     

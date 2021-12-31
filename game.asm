@@ -1,3 +1,4 @@
+include Drawgrd.inc
 include DrawRec.inc
 include DrawCir.inc 
 include DrawDS.inc
@@ -5,6 +6,7 @@ include Drawbtn.inc
 include P1regs.inc
 include P2regs.inc
 include CMDs.inc
+include Valid.inc
 
 
 .model small
@@ -36,6 +38,7 @@ RegToBeUpdated    db ? ; register number that will be updated for the player
 ;commands operands
 operand1 db ?
 operand2 db ?
+
 
  
 
@@ -95,48 +98,29 @@ Lror  db "ROR$"
 Lrol  db "ROL$"
 tes  db "testbtn$"
 
+
+;User string-------------------
+ReadUserSTR                db 5,?,5 dup('0'),'0'
+ReadUserSTR_type           db ?
+ReadUserSTR_syntaxErroFlag db 0  ;0 for no error, 1 for error, RESET FOR USER AFTER HIS TURN HAS ENDED
+Valid_input                db '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
+
+
 .code
 
 main proc far
  
-   mov ax,@data
+    mov ax,@data
     mov ds,ax
     mov es,ax ;to be able to use string operations
      
     mov ah,0
     mov al,10h  ;;10h 640x350
     int 10h
-    ; mov ax,0600h ;benkhaly el shasha white
-    ; mov bh,0fh
-    ; mov cx,0
-    ; mov dx,184FH
-    ; int 10h
-    mov al,03h
-    mov ah,0ch
+    
 
-    mov cx,320
-    mov dx,0
-    loop1: ;split screen into 2 players' screen
-    int 10h
-    inc dx
-    cmp dx,230 ;joe
-    jnz loop1
-
-    mov cx,0  ;split for bottons bel 3ard
-    mov dx,230  ;joe
-    loop2:
-    int 10h
-    inc cx
-    cmp cx,640
-    jnz loop2
-
-    mov cx,0  ;Draw Chat Bar
-    mov dx,300
-    loop33:
-    int 10h
-    inc cx
-    cmp cx,640
-    jnz loop33
+    ;Drawing lines(grid)
+    Drawgrd
 
 
     ;Drawing Commands buttons
@@ -173,32 +157,36 @@ main proc far
     int 33h
 
 
-    GameLoop:
+    GameLoop:;============================================
    
 
     call Getbtnclicked
-
-    mov ah,0afh
-    mov RegToBeUpdated,9h
-    mov Player_num,2h
+   
+    call GetNumFromUser
+     
+    mov ax,cx
+    mov RegToBeUpdated,2h
+    mov Player_num,1h
     UpdateRegValue Player_num, RegToBeUpdated ;new value have to be in AX if 16 bits
                                               ;new value have to be in AH if  8 bits
-    
+    DrawAddressingRow
+                                           
     P1regs
     P2regs
 
 
-    jmp GameLoop   
+    mov ReadUserSTR_syntaxErroFlag,0
+    jmp GameLoop;======================================   
 
-    call Getbtnclicked
-     cmp ax,0ffffh
-     jne alo
-     jmp meshalo
-     alo:
-     DrawAddressingRow
-     meshalo:
-     mov ah,0
-     int 16h
+    ;call Getbtnclicked
+     ;cmp ax,0ffffh
+     ;jne alo
+     ;jmp meshalo
+     ;alo:
+     ;DrawAddressingRow
+     ;meshalo:
+     ;mov ah,0
+     ;int 16h
 
 
 
@@ -252,10 +240,92 @@ Getbtnclicked proc near
     ret
 Getbtnclicked endp
 
+;-----------------------------------------------------
 
+GetNumFromUser proc near
+
+    ;clearing buttons area---
+    mov ax,0600h
+    mov bh,0
+    mov cl,0  ;x1
+    mov ch,17 ;y1
+    mov dl,80 ;x2
+    mov dh,20 ;y2
+    int 10h
+
+    ;setting cursor position-----
+    mov ah,2
+    mov dl,3
+    mov dh,17
+    int 10h 
+
+    ;Reading string-----
+    mov ah,0ah
+    mov dx,offset ReadUserSTR
+    int 21h
+    
+    ;Capitalize every letter entered (if exist)
+    ;and check for bad input, if syntax error ---> jmp exit_user
+    mov dl,[ReadUserSTR+1]
+    Valid_user_syntaxError ReadUserSTR+2,dl ;sending the string, and its actual size
+    
+    cmp ReadUserSTR_syntaxErroFlag,1
+    jz exit_user
+
+    ;Checking how many digits the user entered
+    cmp ReadUserSTR+1,4
+    jz user_16bit_4digit
+    cmp ReadUserSTR+1,3
+    jz user_16bit_3digit
+    cmp ReadUserSTR+1,2
+    jz user_8bit_2digit
+    cmp ReadUserSTR+1,1
+    jz user_8bit_1digit
+
+
+    ;----------------------
+    user_16bit_4digit:
+    mov ReadUserSTR_type,1
+    convrt_string_hex ReadUserSTR+2,ReadUserSTR_type
+    jmp exit_user
+
+    ;----------------------
+    user_16bit_3digit:
+    mov ReadUserSTR_type,1
+    mov ReadUserSTR+1,0 ;moving zero to the actual size slot
+    convrt_string_hex ReadUserSTR+1,ReadUserSTR_type
+    jmp exit_user
+
+    ;----------------------
+    user_8bit_2digit:
+    mov ReadUserSTR_type,2
+    convrt_string_hex ReadUserSTR,ReadUserSTR_type
+    jmp exit_user
+
+    ;----------------------
+    user_8bit_1digit:
+    mov ReadUserSTR_type,2
+    mov ReadUserSTR+1,0 ;moving zero to the actual size slot
+    convrt_string_hex ReadUserSTR-1,ReadUserSTR_type
+    
+    
+    exit_user:
+    push cx
+
+    ;clearing buttons area---
+    mov ax,0600h
+    mov bh,0
+    mov cl,0  ;x1
+    mov ch,17 ;y1
+    mov dl,80 ;x2
+    mov dh,20 ;y2
+    int 10h
+
+    pop cx
+    
+    ret
+GetNumFromUser endp
 
 end main
 
 
- 
-end main
