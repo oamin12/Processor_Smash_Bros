@@ -234,7 +234,7 @@ DrawCommandRow MACRO  ;x y top left corner of the drawn rectangle
     mov dh,19
     int 10h  
     mov ah,9
-    mov dx,offset Lsar
+    mov dx,offset LMov
     int 21h
 
     mov ah,2

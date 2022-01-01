@@ -109,7 +109,7 @@ Lor   db "OR$"
 Lnop  db "NOP$";---------new_row----------
 Lshr  db "SHR$"
 Lshl  db "SHL$"
-Lsar  db "SAR$"
+LMov  db "MOV$"
 Linc  db "INC$"
 Ldec  db "DEC$"
 Lclc  db "CLC$"

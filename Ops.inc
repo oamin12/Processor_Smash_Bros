@@ -1,5 +1,5 @@
 Ops MACRO btn_num
-Local firstReg,axb1,bxb1,cxb1,dxb1,sib1,dib1,spb1,bpb1,ahb1,alb1,bhb1,blb1,chb1,clb1,dhb1,dlb1,p2_AX,p2_BX,p2_CX,p2_DX,p2_SI,p2_SP,p2_DI,p2_BP,p2_AH,p2_AL,p2_BH,p2_BL,p2_CH,p2_CL,p2_DH,p2_DL,getop2,axb2,bxb2,cxb2,dxb2,sib2,dib2,spb2,bpb2,ahb2,alb2,bhb2,blb2,chb2,clb2,dhb2,dlb2,immediateaddb2,p2_AX2,p2_BX2,p2_CX2,p2_DX2,p2_SI2,p2_DI2,p2_SP2,p2_BP2,p2_AH2,p2_AL2,p2_BH2,p2_BL2,p2_CH2,p2_CL2,p2_DH2,p2_DL2,p2_imm,changein2,changein1,Addition,Exit1,skipp,chk_not_8bits,chk_not_16bits,Errors,skipE,check_halfReg,chk_not_8bits1,chk_not_16bits1,check_halfReg1,skipE1,changein1_1,changein2_1,AddwithCarry
+Local firstReg,axb1,bxb1,cxb1,dxb1,sib1,dib1,spb1,bpb1,ahb1,alb1,bhb1,blb1,chb1,clb1,dhb1,dlb1,p2_AX,p2_BX,p2_CX,p2_DX,p2_SI,p2_SP,p2_DI,p2_BP,p2_AH,p2_AL,p2_BH,p2_BL,p2_CH,p2_CL,p2_DH,p2_DL,getop2,axb2,bxb2,cxb2,dxb2,sib2,dib2,spb2,bpb2,ahb2,alb2,bhb2,blb2,chb2,clb2,dhb2,dlb2,immediateaddb2,p2_AX2,p2_BX2,p2_CX2,p2_DX2,p2_SI2,p2_DI2,p2_SP2,p2_BP2,p2_AH2,p2_AL2,p2_BH2,p2_BL2,p2_CH2,p2_CL2,p2_DH2,p2_DL2,p2_imm,changein2,changein1,Addition,Exit1,skipp,chk_not_8bits,chk_not_16bits,Errors,skipE,check_halfReg,chk_not_8bits1,chk_not_16bits1,check_halfReg1,skipE1,AddwithCarry,Subtract,chk_not_8bits2,chk_not_16bits2,check_halfReg2,skipE2,SubwB,chk_not_8bits3,chk_not_16bits3,check_halfReg3,skipE3,Xoring,chk_not_8bits6,chk_not_16bits6,check_halfReg6,skipE6,Anding,chk_not_8bits7,chk_not_16bits7,check_halfReg7,skipE7,Oring,chk_not_8bits8,chk_not_16bits8,check_halfReg8,skipE8
    
 firstReg:
 mov ah,0ch
@@ -98,7 +98,6 @@ p2_DX:
 convrt_string_hex P2_regs+15,mode
 mov operand1,CX
 jmp getop2
-;;;;;;bxb1,cxc1.....
 
 sib1:
 cmp Player_turn,1   ;Player_turn = 0 if it's P1's Player_turn , Player_turn =1 if it's P2's Player_turn
@@ -249,6 +248,10 @@ mov operand1,CX
 jmp getop2
 
 getop2:
+        cmp OpBtn,13
+        jz skipp
+        cmp OpBtn,14
+        jz skipp
         mov ah,0ch
         mov al,0
         int 21h
@@ -517,8 +520,26 @@ cmp OpBtn,0
 jz Addition
 cmp OpBtn,1
 jz AddwithCarry
-
-
+cmp OpBtn,2
+jz Subtract
+cmp OpBtn,3
+jz SubwB
+cmp OpBtn,6
+jz Xoring
+cmp OpBtn,7
+jz Anding
+cmp OpBtn,8
+jz Oring
+cmp OpBtn,19
+jz LRot
+cmp OpBtn,18
+jz RRot
+cmp OpBtn,12
+jz Move
+cmp OpBtn,13
+jz increment
+cmp OpBtn,14
+jz decrement
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Addition:
 ;Addition Validations ;; RegIndirect, direct addressing should be handled as well !!
@@ -545,18 +566,6 @@ add ax,bx
 cmp Player_turn,1
 je changein2
 jmp changein1
-changein2:
-mov bh,operand1_btn
-mov RegToBeUpdated,bh
-mov Player_num,2h
-UpdateRegValue Player_num,RegToBeUpdated
-jmp Exit1
-changein1:
-mov bh,operand1_btn
-mov RegToBeUpdated,bh
-mov Player_num,1h
-UpdateRegValue Player_num,RegToBeUpdated
-jmp Exit1
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 AddwithCarry:
@@ -582,24 +591,249 @@ mov ax,operand1
 mov bx,operand2
 adc ax,bx
 cmp Player_turn,1
-je changein2_1
-jmp changein1_1
-changein2_1:
+je changein2
+jmp changein1
+jmp Exit1
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Subtract:
+cmp operand1_btn,7
+jbe chk_not_8bits2
+jmp chk_not_16bits2
+
+chk_not_8bits2:
+cmp operand2_btn,7
+ja check_halfReg2
+jmp skipE2
+check_halfReg2:
+cmp operand2_btn,15
+jbe Errors
+
+chk_not_16bits2:
+cmp operand2_btn,7
+jbe Errors
+
+skipE2:
+mov ax,operand1
+mov bx,operand2
+sub ax,bx
+cmp Player_turn,1
+je changein2
+jmp changein1
+jmp Exit1
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+SubwB:
+cmp operand1_btn,7
+jbe chk_not_8bits3
+jmp chk_not_16bits3
+
+chk_not_8bits3:
+cmp operand2_btn,7
+ja check_halfReg3
+jmp skipE3
+check_halfReg3:
+cmp operand2_btn,15
+jbe Errors
+
+chk_not_16bits3:
+cmp operand2_btn,7
+jbe Errors
+
+skipE3:
+mov ax,operand1
+mov bx,operand2
+sbb ax,bx
+cmp Player_turn,1
+je changein2
+jmp changein1
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Xoring:
+cmp operand1_btn,7
+jbe chk_not_8bits6
+jmp chk_not_16bits6
+
+chk_not_8bits6:
+cmp operand2_btn,7
+ja check_halfReg6
+jmp skipE6
+check_halfReg6:
+cmp operand2_btn,15
+jbe Errors
+
+chk_not_16bits6:
+cmp operand2_btn,7
+jbe Errors
+
+skipE6:
+mov ax,operand1
+mov bx,operand2
+xor ax,bx
+cmp Player_turn,1
+je changein2
+jmp changein1
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Anding:
+cmp operand1_btn,7
+jbe chk_not_8bits7
+jmp chk_not_16bits7
+
+chk_not_8bits7:
+cmp operand2_btn,7
+ja check_halfReg7
+jmp skipE7
+check_halfReg7:
+cmp operand2_btn,15
+jbe Errors
+
+chk_not_16bits7:
+cmp operand2_btn,7
+jbe Errors
+
+skipE7:
+mov ax,operand1
+mov bx,operand2
+and ax,bx
+cmp Player_turn,1
+je changein2
+jmp changein1
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Oring:
+cmp operand1_btn,7
+jbe chk_not_8bits8
+jmp chk_not_16bits8
+
+chk_not_8bits8:
+cmp operand2_btn,7
+ja check_halfReg8
+jmp skipE8
+check_halfReg8:
+cmp operand2_btn,15
+jbe Errors
+
+chk_not_16bits8:
+cmp operand2_btn,7
+jbe Errors
+
+skipE8:
+mov ax,operand1
+mov bx,operand2
+or ax,bx
+cmp Player_turn,1
+je changein2
+jmp changein1
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+LRot:
+;LRot Validations ;; RegIndirect, direct addressing should be handled as well !!
+cmp operand1_btn,16
+jb chk_rol_cond
+jmp Errors
+
+chk_rol_cond:
+cmp operand2_btn,16 ;(immediate)
+je cond_rol_true
+
+cmp operand2_btn,13 ;(CL)
+jne Errors
+
+cond_rol_true:
+
+;bet0_31:
+cmp operand2,32
+jae Errors
+
+mov ax,operand1
+mov cx,operand2
+rol ax,cl
+cmp Player_turn,1
+je changein2
+jmp changein1
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RRot:
+;LRot Validations ;; RegIndirect, direct addressing should be handled as well !!
+cmp operand1_btn,16
+jb chk_ror_cond
+jmp Errors
+
+chk_ror_cond:
+cmp operand2_btn,16 ;(immediate)
+je cond_ror_true
+
+cmp operand2_btn,13 ;(CL)
+jne Errors
+
+cond_ror_true:
+
+;bet0_31:
+cmp operand2,32
+jae Errors
+
+mov ax,operand1
+mov cx,operand2
+ror ax,cl
+cmp Player_turn,1
+je changein2
+jmp changein1
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Move:
+;Move Validations ;; RegIndirect, direct addressing should be handled as well !!
+cmp operand1_btn,7
+jbe chk_not_8bits12
+jmp chk_not_16bits12
+
+chk_not_8bits12:
+cmp operand2_btn,7
+ja check_halfReg12
+jmp skipE12
+check_halfReg12:
+cmp operand2_btn,15
+jbe Errors
+
+chk_not_16bits12:
+cmp operand2_btn,7
+jbe Errors
+
+skipE12:
+mov ax,operand1
+mov bx,operand2
+mov ax,bx
+cmp Player_turn,1
+je changein2
+jmp changein1
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+increment:
+;No need for validations, if operand1 is value,it is already handled in lines 46,47
+mov ax,operand1
+inc ax
+cmp Player_turn,1
+je changein2
+jmp changein1
+
+decrement:
+;No need for validations, if operand1 is value,it is already handled in lines 46,47
+mov ax,operand1
+dec ax
+cmp Player_turn,1
+je changein2
+jmp changein1
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+changein2:
 mov bh,operand1_btn
 mov RegToBeUpdated,bh
 mov Player_num,2h
 UpdateRegValue Player_num,RegToBeUpdated
 jmp Exit1
-changein1_1:
+changein1:
 mov bh,operand1_btn
 mov RegToBeUpdated,bh
 mov Player_num,1h
 UpdateRegValue Player_num,RegToBeUpdated
 jmp Exit1
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 Errors:
 
 
+
 Exit1:
+
+
 ENDM Ops
