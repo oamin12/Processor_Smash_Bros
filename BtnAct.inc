@@ -1,7 +1,6 @@
 BtnAct MACRO  
     local exit
-
-
+mov OpBtn,ax
 cmp ax, 0
 jz addb
 ; cmp ax, 1
@@ -45,14 +44,8 @@ jz addb
   
  addb: 
  DrawAddressingRow
- AddOp
- 
- 
-
-
-
-
-;  adcb:
+ Ops btn_num
+; adcb:
 ; Getbtnclicked
 ;  subb:
 ; Getbtnclicked

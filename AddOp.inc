@@ -1,7 +1,7 @@
-AddOp MACRO 
+AddOp MACRO btn_num
 Local firstReg,GetSecOp0,GetSecOp1,GetSecOp2      
 firstReg:
- ;showing mouse
+;showing mouse
 ;     mov ax,1
 ;     int 33h
 ;hlt
@@ -102,10 +102,7 @@ p2_AX:
 convrt_string_hex P2_regs,mode
 mov operand1,CX
 GetSecOp0:
- ;showing mouse
-;     mov ax,1
-;     int 33h
-;hlt
+
 mov ah,0ch
     mov al,0
     int 21h
@@ -167,9 +164,21 @@ convrt_string_hex P1_regs,mode
 mov operand2,CX
  mov ax,operand1
  mov bx, operand2
- add ax, bx 
- mov RegToBeUpdated,0h
-    mov Player_num,1h
+ cmp btn_num,0
+ je adding 
+ cmp btn_num,1
+ je adding_c
+cmp btn_num,2
+je subtract
+ adding:
+ add ax, bx
+ adding_c:
+ add ax, bx
+ ;add ax,carryflag
+ subtract:
+ ;sub ax,bv
+mov RegToBeUpdated,0h
+mov Player_num,1h
 UpdateRegValue Player_num,RegToBeUpdated
  jmp Exit1
 

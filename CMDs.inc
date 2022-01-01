@@ -184,7 +184,7 @@ ENDM convrt_string_hex
 
 
 UpdateRegValue MACRO p_num, reg_num
-    Local reg_AX_p1, reg_BX_p1,reg_CX_p1,reg_DX_p1,reg_SI_p1,reg_DI_p1,reg_SP_p1,reg_BP_p1,Reg_byte_player1,reg_AH_p1,reg_AL_p1,reg_BH_p1,reg_BL_p1,reg_CH_p1,reg_CL_p1,reg_DH_p1,reg_DL_p1,PLAYER_2_REGS,reg_AX_p2,reg_BX_p2,reg_CX_p2,reg_DX_p2,reg_SI_p2,reg_DI_p2,reg_SP_p2,reg_BP_p2,Reg_byte_player2,reg_AH_p2,reg_AL_p2,reg_BH_p2,reg_BL_p2,reg_CH_p2,reg_CL_p2,reg_DH_p2,reg_DL_p2,exit_updt
+Local reg_AX_p1, reg_BX_p1,reg_CX_p1,reg_DX_p1,reg_SI_p1,reg_DI_p1,reg_SP_p1,reg_BP_p1,Reg_byte_player1,reg_AH_p1,reg_AL_p1,reg_BH_p1,reg_BL_p1,reg_CH_p1,reg_CL_p1,reg_DH_p1,reg_DL_p1,PLAYER_2_REGS,reg_AX_p2,reg_BX_p2,reg_CX_p2,reg_DX_p2,reg_SI_p2,reg_DI_p2,reg_SP_p2,reg_BP_p2,Reg_byte_player2,reg_AH_p2,reg_AL_p2,reg_BH_p2,reg_BL_p2,reg_CH_p2,reg_CL_p2,reg_DH_p2,reg_DL_p2,exit_updt    
    
     Convrt_Hex_String ;takes the new value from AX and converts it to string in num_placeholder variable
     
@@ -266,6 +266,7 @@ UpdateRegValue MACRO p_num, reg_num
     ;8-bit registers-----------------------------------------------
 
     Reg_byte_player1:
+    add si,2
 
     mov cx,2
     cmp reg_num,8d
@@ -405,8 +406,9 @@ UpdateRegValue MACRO p_num, reg_num
     jmp exit_updt
 
     ;8-bit registers-----------------------------------------------
-
+    
     Reg_byte_player2:
+    add si,2
 
     mov cx,2
     cmp reg_num,8d
