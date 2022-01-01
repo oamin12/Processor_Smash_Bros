@@ -12,8 +12,8 @@ include DrawTri.inc
 include DrawObj.inc
 include CMDs.inc
 include BtnAct.inc
-include AddOp.inc
 include Valid.inc
+include Ops.inc
 .model small
 .386
 .stack 64
@@ -45,14 +45,15 @@ clro db ?
 btn_num           dw ?
 num_placeholder   db "0000$"
 zeros_placeholder db "0000$"
-Player_turn       dw 2    ;1-> change player 2 registers,  2-> change player 1 registers
+Player_turn       dw 2
 Player_num        db ? ; used to know which player register will change
 RegToBeUpdated    db ? ; register number that will be updated for the player
-
+OpBtn             dw ?
 ;commands operands
-operand1 dw ?
-operand2 dw ?
-result   dw ?
+operand1 dw 0000
+operand2 dw 0000
+operand1_btn db ?
+operand2_btn db ?
 mode db 1 
 ;Registers labels--------------------
 Lax      db "AX$"
@@ -88,8 +89,8 @@ LFallObjP2 db '0$'
 NumPos db ?
 ;Registers values---------------------
 ;           AX[0]   BX[5]   CX[10]  DX[15]  SI[20]  DI[25]  SP[30]  BP[35]
-P1_regs db "0016$","0001$","0000$","0000$","0000$","0000$","0000$","0000$"
-P2_regs db "0002$","0000$","0000$","0000$","0000$","0000$","0000$","0000$"
+P1_regs db "0002$","0019$","000A$","00FF$","0000$","0000$","0000$","0000$"
+P2_regs db "0000$","0000$","0000$","0000$","0000$","0000$","0000$","0000$"
 
 
 db "$$$"
@@ -116,7 +117,7 @@ Lidiv db "IDIV$"
 Limul db "IMUL$"
 Lror  db "ROR$"
 Lrol  db "ROL$"
-tes  db "testbtn$"
+tes   db "testbtn$"
 ;User string-------------------
 ReadUserSTR                db 5,?,5 dup('0'),'0'
 ReadUserSTR_type           db ?
@@ -133,8 +134,6 @@ main proc far
     mov ah,0
     mov al,10h  ;;10h 640x350
     int 10h
-
-    
     
     ;Drawing lines(grid)
     Drawgrd
@@ -150,13 +149,13 @@ main proc far
 
     mov x1,120
     mov y1,180
-    Gun x1, y1
+   ; Gun x1, y1
     mov x1,440
     mov y1,180
-    Gun2 x1, y1
-    
+   ; Gun2 x1, y1
     Start_Again:
-	
+
+    
     Drawgrd
     P1regs
     P2regs
@@ -170,9 +169,12 @@ main proc far
    
     P1regs
     P2regs
-    GameLoop1:;============================================
+    mov ax,1
+    int 33h
+    GameLoop:;============================================
    
 
+    call Getbtnclicked
     call Getbtnclicked
     cmp ax, 0ffffh
     jnz RegAddMenu 
@@ -180,34 +182,28 @@ main proc far
     RegAddMenu:
     BtnAct  
     jmp Start_Again
-    ; mov ah,0afh
-    ; mov RegToBeUpdated,9h
-    ; mov Player_num,2h
-    ; UpdateRegValue Player_num, RegToBeUpdated ;new value have to be in AX if 16 bits
-   
-    call GetNumFromUser ; Value returns in CX ALways 'Must be edited'
+    ; call GetNumFromUser ; Value returns in CX ALways 'Must be edited'
      
-    mov ax,cx
-    mov RegToBeUpdated,2h
-    mov Player_num,1h
-    UpdateRegValue Player_num, RegToBeUpdated ;new value have to be in AX if 16 bits
-                                              ;new value have to be in AH if  8 bits
-    DrawAddressingRow
+    ; mov ax,cx
+    ; mov RegToBeUpdated,2h
+    ; mov Player_num,1h
+    ; UpdateRegValue Player_num, RegToBeUpdated ;new value have to be in AX if 16 bits
+    ;                                           ;new value have to be in AH if  8 bits
+    ; DrawAddressingRow
                                            
     P1regs
     P2regs
 
 
-    mov ReadUserSTR_syntaxErroFlag,0
-    jmp GameLoop1;======================================   
+   ; mov ReadUserSTR_syntaxErroFlag,0
 
 
-    GameLoop: 
+    ;GameLoop: 
     
     ;showing mouse
-    mov ax,1
-    int 33h
-    call Getbtnclicked
+    ; mov ax,1
+    ; int 33h
+    ; call Getbtnclicked
     ;cmp ax, 0ffffh
     ;jnz RegAddMenu 
     ;jz GameLoop
@@ -235,7 +231,6 @@ Getbtnclicked proc near
             mov ax,0003h
             int 33h ;CX(X), DX(Y)
             test bx,1
-            hlt
             jz noleftclick ;break if user clicked the left click
  
     mov bx,dx

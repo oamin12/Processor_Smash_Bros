@@ -1,5 +1,5 @@
 Ops MACRO btn_num
-Local firstReg,axb1,bxb1,cxb1,dxb1,sib1,dib1,spb1,bpb1,ahb1,alb1,bhb1,blb1,chb1,clb1,dhb1,dlb1,p2_AX,p2_BX,p2_CX,p2_DX,p2_SI,p2_SP,p2_DI,p2_BP,p2_AH,p2_AL,p2_BH,p2_BL,p2_CH,p2_CL,p2_DH,p2_DL,getop2,axb2,bxb2,cxb2,dxb2,sib2,dib2,spb2,bpb2,ahb2,alb2,bhb2,blb2,chb2,clb2,dhb2,dlb2,p2_AX2,p2_BX2,p2_CX2,p2_DX2,p2_SI2,p2_DI2,p2_SP2,p2_BP2,p2_AH2,p2_AL2,p2_BH2,p2_BL2,p2_CH2,p2_CL2,p2_DH2,p2_DL2,changein2,changein1,Addition,Exit1,skipp,chk_not_8bits,chk_not_16bits,Errors,skipE,check_halfReg
+Local firstReg,axb1,bxb1,cxb1,dxb1,sib1,dib1,spb1,bpb1,ahb1,alb1,bhb1,blb1,chb1,clb1,dhb1,dlb1,p2_AX,p2_BX,p2_CX,p2_DX,p2_SI,p2_SP,p2_DI,p2_BP,p2_AH,p2_AL,p2_BH,p2_BL,p2_CH,p2_CL,p2_DH,p2_DL,getop2,axb2,bxb2,cxb2,dxb2,sib2,dib2,spb2,bpb2,ahb2,alb2,bhb2,blb2,chb2,clb2,dhb2,dlb2,immediateaddb2,p2_AX2,p2_BX2,p2_CX2,p2_DX2,p2_SI2,p2_DI2,p2_SP2,p2_BP2,p2_AH2,p2_AL2,p2_BH2,p2_BL2,p2_CH2,p2_CL2,p2_DH2,p2_DL2,p2_imm,changein2,changein1,Addition,Exit1,skipp,chk_not_8bits,chk_not_16bits,Errors,skipE,check_halfReg,chk_not_8bits1,chk_not_16bits1,check_halfReg1,skipE1,changein1_1,changein2_1,AddwithCarry
    
 firstReg:
 mov ah,0ch
@@ -515,11 +515,11 @@ skipp:
 ;;:OPS;;;;
 cmp OpBtn,0
 jz Addition
-;cmp OpBtn,1
-;jz AddwithCarry
+cmp OpBtn,1
+jz AddwithCarry
 
 
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Addition:
 ;Addition Validations ;; RegIndirect, direct addressing should be handled as well !!
 cmp operand1_btn,7
@@ -558,375 +558,48 @@ mov Player_num,1h
 UpdateRegValue Player_num,RegToBeUpdated
 jmp Exit1
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+AddwithCarry:
+;Addition Validations ;; RegIndirect, direct addressing should be handled as well !!
+cmp operand1_btn,7
+jbe chk_not_8bits1
+jmp chk_not_16bits1
 
+chk_not_8bits1:
+cmp operand2_btn,7
+ja check_halfReg1
+jmp skipE1
+check_halfReg1:
+cmp operand2_btn,15
+jbe Errors
+
+chk_not_16bits1:
+cmp operand2_btn,7
+jbe Errors
+
+skipE1:
+mov ax,operand1
+mov bx,operand2
+adc ax,bx
+cmp Player_turn,1
+je changein2_1
+jmp changein1_1
+changein2_1:
+mov bh,operand1_btn
+mov RegToBeUpdated,bh
+mov Player_num,2h
+UpdateRegValue Player_num,RegToBeUpdated
+jmp Exit1
+changein1_1:
+mov bh,operand1_btn
+mov RegToBeUpdated,bh
+mov Player_num,1h
+UpdateRegValue Player_num,RegToBeUpdated
+jmp Exit1
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; axReg_axReg:
-; cmp Player_turn,2 
-; jz p1aal
-; jmp p2aal
 
-; p1aal:
-; convrt_string_hex P1_regs,mode
-; mov operand2,CX
-;  mov ax,operand1
-;  mov bx, operand2
-
-
-; add ax, bx 
-; mov RegToBeUpdated,0h
-; mov Player_num,1h
-; UpdateRegValue Player_num,RegToBeUpdated
-;  jmp Exit1
-
-; p2aal:
-; convrt_string_hex P2_regs,mode
-; mov operand2,CX
-;  mov ax,operand1
-;  mov bx, operand2
-;  add ax, bx 
-;  mov RegToBeUpdated,0h
-;     mov Player_num,2h
-; UpdateRegValue Player_num,RegToBeUpdated
-; jmp Exit1
-
-; axReg_bxReg:
-
-; cmp Player_turn,2 
-; jz p1abl
-; jmp p2abl
-
-; p1abl:
-; convrt_string_hex P1_regs+5,mode
-; mov operand2,CX
-;  mov ax,operand1
-;  mov bx, operand2
-;  add ax, bx 
-;  mov RegToBeUpdated,0h
-;     mov Player_num,1h
-; UpdateRegValue Player_num,RegToBeUpdated
-;  jmp Exit1
-
-; p2abl:
-; convrt_string_hex P2_regs+5,mode
-; mov operand2,CX
-;  mov ax,operand1
-;  mov bx, operand2
-;  add ax, bx 
-;  mov RegToBeUpdated,0h
-;     mov Player_num,2h
-; UpdateRegValue Player_num,RegToBeUpdated
-; jmp Exit1
-
-; axReg_cxReg:
-
-; cmp Player_turn,2 
-; jz p1acl
-; jmp p2acl
-
-; p1acl:
-; convrt_string_hex P1_regs+10,mode
-; mov operand2,CX
-;  mov ax,operand1
-;  mov bx, operand2
-;  add ax, bx 
-;  mov RegToBeUpdated,0h
-;     mov Player_num,1h
-; UpdateRegValue Player_num,RegToBeUpdated
-;  jmp Exit1
-
-; p2acl:
-; convrt_string_hex P2_regs+10,mode
-; mov operand2,CX
-;  mov ax,operand1
-;  mov bx, operand2
-;  add ax, bx 
-;  mov RegToBeUpdated,0h
-;     mov Player_num,2h
-; UpdateRegValue Player_num,RegToBeUpdated
-; jmp Exit1
-
-; axReg_dxReg:
-
-; cmp Player_turn,2 
-; jz p1adl
-; jmp p2adl
-
-; p1adl:
-; convrt_string_hex P1_regs+15,mode
-; mov operand2,CX
-;  mov ax,operand1
-;  mov bx, operand2
-;  add ax, bx 
-;  mov RegToBeUpdated,0h
-;     mov Player_num,1h
-; UpdateRegValue Player_num,RegToBeUpdated
-;  jmp Exit1
-
-; p2adl:
-; convrt_string_hex P2_regs+15,mode
-; mov operand2,CX
-;  mov ax,operand1
-;  mov bx, operand2
-;  add ax, bx 
-;  mov RegToBeUpdated,0h
-;     mov Player_num,2h
-; UpdateRegValue Player_num,RegToBeUpdated
-; jmp Exit1
-
-; axReg_siReg:
-
-; cmp Player_turn,2 
-; jz p1asil
-; jmp p2asil
-
-; p1asil:
-; convrt_string_hex P1_regs+20,mode
-; mov operand2,CX
-;  mov ax,operand1
-;  mov bx, operand2
-;  add ax, bx 
-;  mov RegToBeUpdated,0h
-;     mov Player_num,1h
-; UpdateRegValue Player_num,RegToBeUpdated
-;  jmp Exit1
-
-; p2asil:
-; convrt_string_hex P2_regs+20,mode
-; mov operand2,CX
-;  mov ax,operand1
-;  mov bx, operand2
-;  add ax, bx 
-;  mov RegToBeUpdated,0h
-;     mov Player_num,2h
-; UpdateRegValue Player_num,RegToBeUpdated
-; jmp Exit1
-
-; axReg_diReg:
-
-; cmp Player_turn,2 
-; jz p1adil
-; jmp p2adil
-
-; p1adil:
-; convrt_string_hex P1_regs+25,mode
-; mov operand2,CX
-;  mov ax,operand1
-;  mov bx, operand2
-;  add ax, bx 
-;  mov RegToBeUpdated,0h
-;     mov Player_num,1h
-; UpdateRegValue Player_num,RegToBeUpdated
-;  jmp Exit1
-
-; p2adil:
-; convrt_string_hex P2_regs+25,mode
-; mov operand2,CX
-;  mov ax,operand1
-;  mov bx, operand2
-;  add ax, bx 
-;  mov RegToBeUpdated,0h
-;     mov Player_num,2h
-; UpdateRegValue Player_num,RegToBeUpdated
-; jmp Exit1
-
-; axReg_spReg:
-
-; cmp Player_turn,2 
-; jz p1aspl
-; jmp p2aspl
-
-; p1aspl:
-; convrt_string_hex P1_regs+30,mode
-; mov operand2,CX
-;  mov ax,operand1
-;  mov bx, operand2
-;  add ax, bx 
-;  mov RegToBeUpdated,0h
-;     mov Player_num,1h
-; UpdateRegValue Player_num,RegToBeUpdated
-;  jmp Exit1
-
-; p2aspl:
-; convrt_string_hex P2_regs+30,mode
-; mov operand2,CX
-;  mov ax,operand1
-;  mov bx, operand2
-;  add ax, bx 
-;  mov RegToBeUpdated,0h
-;     mov Player_num,2h
-; UpdateRegValue Player_num,RegToBeUpdated
-; jmp Exit1
-
-
-
-; axReg_bpReg:
-
-; cmp Player_turn,2 
-; jz p1abpl
-; jmp p2abpl
-
-; p1abpl:
-; convrt_string_hex P1_regs+35,mode
-; mov operand2,CX
-;  mov ax,operand1
-;  mov bx, operand2
-;  add ax, bx 
-;  mov RegToBeUpdated,0h
-;     mov Player_num,1h
-; UpdateRegValue Player_num,RegToBeUpdated
-;  jmp Exit1
-
-; p2abpl:
-; convrt_string_hex P2_regs+35,mode
-; mov operand2,CX
-;  mov ax,operand1
-;  mov bx, operand2
-;  add ax, bx 
-;  mov RegToBeUpdated,0h
-;     mov Player_num,2h
-; UpdateRegValue Player_num,RegToBeUpdated
-; jmp Exit1
-
-
-; axReg_ahReg:
-; cmp Player_turn,0 
-; jz p1aahl
-; jmp p2aahl
-; p1aahl:
-; ;Decrease points
-; jmp Exit1
-
-; p2aahl:
-; ;Decrease points
-; jmp Exit1
-
-; axReg_alReg:
-; cmp Player_turn,0 
-; jz p1aall
-; jmp p2aall
-; p1aall:
-; ;Decrease points
-; jmp Exit1
-
-; p2aall:
-; ;Decrease points
-; jmp Exit1
-
-; axReg_bhReg:
-; cmp Player_turn,0 
-; jz p1abhl
-; jmp p2abhl
-; p1abhl:
-; ;Decrease points
-; jmp Exit1
-
-; p2abhl:
-; ;Decrease points
-; jmp Exit1
-
-
-; axReg_blReg:
-; cmp Player_turn,0 
-; jz p1abll
-; jmp p2abll
-; p1abll:
-; ;Decrease points
-; jmp Exit1
-
-; p2abll:
-; ;Decrease points
-; jmp Exit1
-
-; axReg_chReg:
-; cmp Player_turn,0 
-; jz p1achl
-; jmp p2achl
-; p1achl:
-; ;Decrease points
-; jmp Exit1
-
-; p2achl:
-; ;Decrease points
-; jmp Exit1
-
-
-; axReg_clReg:
-; cmp Player_turn,0 
-; jz p1acll
-; jmp p2acll
-; p1acll:
-; ;Decrease points
-; jmp Exit1
-
-; p2acll:
-; ;Decrease points
-; jmp Exit1
-
-
-; axReg_dhReg:
-; cmp Player_turn,0 
-; jz p1adhl
-; jmp p2adhl
-; p1adhl:
-; ;Decrease points
-; jmp Exit1
-
-; p2adhl:
-; ;Decrease points
-; jmp Exit1
-
-
-; axReg_dlReg:
-; cmp Player_turn,0 
-; jz p1adll
-; jmp p2adll
-; p1adll:
-; ;Decrease points
-; jmp Exit1
-
-; p2adll:
-; ;Decrease points
-; jmp Exit1
-
-
-; axReg_immediate:
-; cmp Player_turn,2 
-; jz p1aimml
-; jmp p2aimml
-
-; p1aimml:
-; call GetNumFromUser ; Value returns in CX ALways 'Must be edited'
-;     add ax,cx
-;     mov RegToBeUpdated,0h
-;     mov Player_num,1h
-;     UpdateRegValue Player_num, RegToBeUpdated
-;  jmp Exit1
-
-; p2aimml:
-; call GetNumFromUser ; Value returns in CX ALways 'Must be edited'
-;     add ax,cx
-;     mov RegToBeUpdated,0h
-;     mov Player_num,2h
-;     UpdateRegValue Player_num, RegToBeUpdated
-;  jmp Exit1
-
-; axReg_direct:
-; cmp Player_turn,0 
-; jz p1aDirectl
-; jmp p2aDirectl
-
-; axReg_indirect:
-; cmp Player_turn,0 
-; jz p1aIndirectl
-; jmp p2aIndirectl
-
-; axReg_based:
-; cmp Player_turn,0 
-; jz p1aBasedl
-; jmp p2aBasedl
 Errors:
 
 
 Exit1:
-
 ENDM Ops
