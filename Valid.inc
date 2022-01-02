@@ -76,7 +76,7 @@ Valid_user_syntaxError  MACRO STR,STR_size
     
     exit_syntaxErrorValidation:
     mov ReadUserSTR_syntaxErroFlag,1
-
+    
     exit_NoError:
 
 ENDM Valid_user_syntaxError

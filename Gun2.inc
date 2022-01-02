@@ -6,7 +6,7 @@ Gun2 MACRO x1,y1
     int 1AH      ; CX:DX now hold number of clock ticks since midnight
     mov  ax, dx
     xor  dx, dx
-    mov  cx, 3d
+    mov  cx, 4d
     div  cx       ;here dx contains the remainder of the division - from 0 to 3
     cmp dx,0
     je yellow
@@ -191,6 +191,9 @@ cmp clro,0Dh
 je incpurble
 
 incyellow:
+mov points_inc_index,2
+mov points_inc_value,1
+IncrementPoints points_inc_index,points_inc_value
 mov Ah,LFallObjY2
 add Ah,30h
 inc AH
@@ -198,6 +201,9 @@ sub Ah,30h
 mov LFallObjY2,ah
 jmp Exit
 incred:
+mov points_inc_index,2
+mov points_inc_value,2
+IncrementPoints points_inc_index,points_inc_value
 mov Ah,LFallObjR2
 add Ah,30h
 inc AH
@@ -205,6 +211,9 @@ sub Ah,30h
 mov LFallObjR2,ah
 jmp Exit
 incgreen:
+mov points_inc_index,2
+mov points_inc_value,4
+IncrementPoints points_inc_index,points_inc_value
 mov Ah,LFallObjG2
 add Ah,30h
 inc AH
@@ -212,6 +221,9 @@ sub Ah,30h
 mov LFallObjG2,ah
 jmp Exit
 incpurble:
+mov points_inc_index,2
+mov points_inc_value,8
+IncrementPoints points_inc_index,points_inc_value
 mov Ah,LFallObjP2
 add Ah,30h
 inc AH

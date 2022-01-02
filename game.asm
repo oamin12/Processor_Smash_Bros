@@ -14,10 +14,40 @@ include CMDs.inc
 include BtnAct.inc
 include Valid.inc
 include Ops.inc
+include Pts.inc
+include Print.inc
+include P1ds.inc
+include p2ds.inc
+
 .model small
 .386
 .stack 64
 .data
+
+;---------------MAIN MENU DATA---------------------------------------------
+;X & Y positions
+point_x                     db ?
+point_y                     db ?
+ 
+;user info
+user_name                   db 17,?, 17 dup('$')
+P1_init_points              db 3,?,2  dup('0'),'$','$'
+P2_init_points              db 3,?,2  dup('0'),'$','$'
+points_inc_value            dw ? ;points incrementation value
+points_inc_index            db ? ;Player1-->1 && Player2-->2
+
+
+;Messages strings
+user_name_message           db 'Enter User Name:',10,13,'$'
+user_init_points_message    db 10,13,'Enter Initial Points:',10,13,'$'
+main_menu_continue_message  db 10,13,'Press Enter to contiune$'
+press_F1_message            db 'Press [F1] to start chatting mode $'
+press_F2_message            db 'Press [F2] to game mode $'
+press_ESC_message           db 'Press [ESC] to exit program $'
+;----------------------------------------------------------------
+
+
+
 xr dw ?
 yr dw ?
  
@@ -48,12 +78,14 @@ zeros_placeholder db "0000$"
 Player_turn       dw 2
 Player_num        db ? ; used to know which player register will change
 RegToBeUpdated    db ? ; register number that will be updated for the player
+AddrToBeUpdated   db ? ; data segment address number that will be updated for the player
 OpBtn             dw ?
 ;commands operands
 operand1 dw 0000
 operand2 dw 0000
 operand1_btn db ?
 operand2_btn db ?
+Temp_Mul dw ?
 mode db 1 
 ;Registers labels--------------------
 Lax      db "AX$"
@@ -74,8 +106,8 @@ Ldh      db "DH$"
 Ldl      db "DL$"
 Limd_adr db "VAL$"
 Ldir_adr db "[VL]$"
-Lind_adr db "[BX]$"
-Lbas_adr db "[BX+V]$"
+Lind_adr db "[Reg]$"
+Lbas_adr db "[Reg+V]$"
 
 ;;Falling Objects Data
 LFallObjY1 db '0$'
@@ -87,12 +119,22 @@ LFallObjR2 db '0$'
 LFallObjG2 db '0$'
 LFallObjP2 db '0$'
 NumPos db ?
-;Registers values---------------------
+
+;Registers and Data Segment values---------------------
 ;           AX[0]   BX[5]   CX[10]  DX[15]  SI[20]  DI[25]  SP[30]  BP[35]
-P1_regs db "0002$","0019$","000A$","00FF$","0000$","0000$","0000$","0000$"
+P1_regs db "0000$","0000$","0000$","0000$","0000$","0000$","0000$","0000$"
+;           [0]   [3]   [6]   [9]   [12]  [15]  [18]  [21]  [24]
+P1_ds   db "00$","00$","00$","00$","00$","00$","00$","00$","00$"
+
+
+;           AX[0]   BX[5]   CX[10]  DX[15]  SI[20]  DI[25]  SP[30]  BP[35]
 P2_regs db "0000$","0000$","0000$","0000$","0000$","0000$","0000$","0000$"
+;           [0]   [3]   [6]   [9]   [12]  [15]  [18]  [21]  [24]
+P2_ds   db "00$","00$","00$","00$","00$","00$","00$","00$","00$"
 
 
+;-----------------------------
+DS_labels db "0$","1$","2$","3$","4$","5$","6$","7$","8$"
 db "$$$"
 trycatch db "0000$"
  
@@ -123,12 +165,99 @@ ReadUserSTR                db 5,?,5 dup('0'),'0'
 ReadUserSTR_type           db ?
 ReadUserSTR_syntaxErroFlag db 0  ;0 for no error, 1 for error, RESET FOR USER AFTER HIS TURN HAS ENDED
 Valid_input                db '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
+;temps
+get_datasegment_address   dw ?
+get_datasegment_mode      db ?
+temp1                     db ? ; used in get value from data segment
 
 .code
 
-main proc far
- 
-   mov ax,@data
+MainMenu proc far
+
+mov ax,@data
+mov ds,ax
+mov es,ax 
+
+mov ah,0
+mov al,3h
+int 10h   ;opening text mode
+
+;Taking Input----------------------------------------
+ShowMessage user_name_message ;displaying user_name_message 
+
+mov ah,0Ah
+mov dx,offset user_name
+int 21h   ;taking user name
+
+
+ShowMessage user_init_points_message  ;displaying user_init_points_message 
+
+
+mov ah,0Ah
+mov dx,offset P1_init_points
+int 21h   ;taking user intitial points
+
+ShowMessage user_init_points_message  ;displaying user_init_points_message 
+
+
+mov ah,0Ah
+mov dx,offset P2_init_points
+int 21h   ;taking user intitial points
+
+
+ShowMessage main_menu_continue_message ;displaying main_menu_continue_message
+;------------------------------------------------
+call AssignSmallestPts ;choosing the lowest points
+
+Enter_Loop:
+    mov ah,0
+    int 16h     ;getting key pressed from the buffer
+    cmp AL,13d  ;checking if user pressed 'Enter'
+    jz contiune
+    mov ah,0ch
+    mov al,0
+    int 21h     ;flushing keyboard buffer
+    jmp Enter_Loop
+
+
+contiune: ;continue program
+;Main Menu
+mov ax,0600h
+mov bh,07
+mov cx,0000
+mov dx,184FH
+int 10h  ;clearing whole screen
+
+
+call CreateMainMenu
+
+;--------------------------------------------
+
+
+mov ah,0
+int 16h
+
+cmp ah,3bh ;if the user pressed F1
+jz RunChat
+
+cmp ah,3ch ;if the user pressed F2
+jz RunGame
+
+RunChat:
+;call chat
+
+jmp exit_main
+
+RunGame:
+call PlayGame
+
+
+exit_main:
+
+MainMenu endp
+
+PlayGame proc near
+    mov ax,@data
     mov ds,ax
     mov es,ax 
     mov ah,0
@@ -142,14 +271,17 @@ main proc far
     ;DrawAddressingRow
 
     ;Drawing Registers
+    Update_P1ds
+    Update_P2ds
     P1regs
     P2regs
     DrawDS
+    UpdatePoints
     
 
     mov x1,120
     mov y1,180
-   ; Gun x1, y1
+    Gun x1, y1
     mov x1,440
     mov y1,180
    ; Gun2 x1, y1
@@ -173,14 +305,45 @@ main proc far
     int 33h
     GameLoop:;============================================
    
+    UpdatePoints
+    ; ;;;
+    ; mov AddrToBeUpdated,0h
+    ; mov Player_num,1h
+    ; mov dl,1h
+    ; UpdateDataSegmentValue Player_num, AddrToBeUpdated,dl  ;mode 1 for 16bits, mode 2 for 8bits
 
+    ; mov dl,1
+    ; mov dh,0
+    ; GetDataSegmentValue dl,dh
+
+    ; mov ax,CX
+    ; mov AddrToBeUpdated,1h
+    ; mov Player_num,2h
+    ; mov dl,1h
+    ; UpdateDataSegmentValue Player_num, AddrToBeUpdated,dl  ;mode 1 for 16bits, mode 2 for 8bits
+
+    ; DrawAddressingRow
+                 
     call Getbtnclicked
-    call Getbtnclicked
+   
     cmp ax, 0ffffh
     jnz RegAddMenu 
     jz GameLoop
     RegAddMenu:
+
     BtnAct  
+    P1regs
+    
+    mov ReadUserSTR_syntaxErroFlag,0
+    ;; here check if player points reaches ZERO
+    cmp Player_turn,2
+    je chng_turn
+    jmp chng_turn2
+    chng_turn:
+    mov Player_turn,1
+    jmp Start_Again
+    chng_turn2:
+    mov Player_turn,2
     jmp Start_Again
     ; call GetNumFromUser ; Value returns in CX ALways 'Must be edited'
      
@@ -191,19 +354,15 @@ main proc far
     ;                                           ;new value have to be in AH if  8 bits
     ; DrawAddressingRow
                                            
-    P1regs
-    P2regs
-
-
-   ; mov ReadUserSTR_syntaxErroFlag,0
+    
 
 
     ;GameLoop: 
     
     ;showing mouse
-    ; mov ax,1
-    ; int 33h
-    ; call Getbtnclicked
+    ;mov ax,1
+    ;int 33h
+    ;call Getbtnclicked
     ;cmp ax, 0ffffh
     ;jnz RegAddMenu 
     ;jz GameLoop
@@ -223,8 +382,95 @@ main proc far
 
 
     hlt
-main endp
- 
+    ret
+playGame endp
+
+;-----------MAIN MENU PROCEDURES----------------
+
+CreateMainMenu PROC NEAR
+
+mov point_x,32d
+mov point_y,10d
+
+SetCursor point_x,point_y
+
+ShowMessage press_F1_message
+;----------------------------------------
+mov point_x,32d
+mov point_y,12d
+
+SetCursor point_x,point_y
+
+ShowMessage press_F2_message
+;----------------------------------------
+mov point_x,32d
+mov point_y,14d
+
+SetCursor point_x,point_y
+
+ShowMessage press_ESC_message
+;----------------------------------------
+
+ret
+CreateMainMenu ENDP
+
+
+;Taking lowest points and assigning it to both users
+AssignSmallestPts PROC NEAR
+
+cmp P1_init_points+1,2
+jnz assign_1num1
+mov dl,2
+convrt_string_hex P1_init_points,dl
+jmp skip_assign1
+
+assign_1num1:
+mov dl,3
+convrt_string_hex P1_init_points-1,dl
+skip_assign1:
+
+mov ax,cx
+
+;--------------------------------------------------
+push ax
+cmp P2_init_points+1,2
+jnz assign_1num2
+mov dl,2
+convrt_string_hex P2_init_points,dl
+jmp skip_assign2
+
+assign_1num2:
+mov dl,3
+convrt_string_hex P2_init_points-1,dl
+skip_assign2:
+
+pop ax
+mov bx,cx
+
+mov cx,2
+;ax-> Pts1, bx->Pts2
+cmp ax,bx
+ja assign_pts2
+
+mov si,offset P1_init_points+2
+mov di,offset P2_init_points+2
+repe movsb
+
+jmp exit_assign
+
+assign_pts2:;player2 has the lowest points
+
+mov si,offset P2_init_points+2
+mov di,offset P1_init_points+2
+repe movsb
+
+exit_assign:
+ret
+AssignSmallestPts ENDP
+
+;---------------------------------------------
+;---------------------------------------------
+
 Getbtnclicked proc near
  
     noleftclick:
@@ -355,4 +601,4 @@ GetNumFromUser proc near
     ret
 GetNumFromUser endp
  
-end main
+end MainMenu

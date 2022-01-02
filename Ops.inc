@@ -46,8 +46,8 @@ jz dlb1
 cmp ax, 16
 jz Errors
 
-; cmp ax, 17 
-; jz directaddb
+cmp ax, 17    ;; take 1st operand again from the buttons
+jz directaddb
 
 ; cmp ax, 18
 ; jz indirectregb
@@ -247,10 +247,22 @@ convrt_string_hex P2_regs+15,mode
 mov operand1,CX
 jmp getop2
 
+directaddb:
+
+
+
 getop2:
-        cmp OpBtn,13
+        cmp OpBtn,4    ;No operand2 for DIV
         jz skipp
-        cmp OpBtn,14
+        cmp OpBtn,5    ;No operand2 for MUL
+        jz skipp 
+        cmp OpBtn,13   ;No operand2 for INC
+        jz skipp
+        cmp OpBtn,14   ;No operand2 for DEC
+        jz skipp
+        cmp OpBtn,16   ;;No operand2 for IDIV
+        jz skipp
+        cmp OpBtn,17   ;;No operand2 for IMUL
         jz skipp
         mov ah,0ch
         mov al,0
@@ -497,6 +509,8 @@ immediateaddb2:
 cmp Player_turn,1   ;Player_turn = 0 if it's P1's Player_turn , Player_turn =1 if it's P2's Player_turn
 jz p2_imm
 call GetNumFromUser ; Value returns in CX ALways 'Must be edited'
+cmp ReadUserSTR_syntaxErroFlag,1
+je Errors
 mov operand2,cx
 ; mov bh,operand1_btn
 ; mov RegToBeUpdated,bh
@@ -524,22 +538,37 @@ cmp OpBtn,2
 jz Subtract
 cmp OpBtn,3
 jz SubwB
+cmp OpBtn,4
+jz Division
+cmp OpBtn,5
+jz Multiplication
 cmp OpBtn,6
 jz Xoring
 cmp OpBtn,7
 jz Anding
 cmp OpBtn,8
 jz Oring
-cmp OpBtn,19
-jz LRot
-cmp OpBtn,18
-jz RRot
+cmp OpBtn,10
+jz ShiftR
+cmp OpBtn,11
+jz ShiftL
 cmp OpBtn,12
 jz Move
 cmp OpBtn,13
 jz increment
 cmp OpBtn,14
 jz decrement
+cmp OpBtn,16
+jz IDivision
+cmp OpBtn,17
+jz IMultiplication
+cmp OpBtn,18
+jz RRot
+cmp OpBtn,19
+jz LRot
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Addition:
 ;Addition Validations ;; RegIndirect, direct addressing should be handled as well !!
@@ -774,6 +803,358 @@ cmp Player_turn,1
 je changein2
 jmp changein1
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ShiftR:
+cmp operand1_btn,16
+jb chk_shr_cond
+jmp Errors
+
+chk_shr_cond:
+cmp operand2_btn,16 ;(immediate)
+je cond_shr_true
+
+cmp operand2_btn,13 ;(CL)
+jne Errors
+
+cond_shr_true:
+
+;bet0_31:
+cmp operand2,32
+jae Errors
+
+mov ax,operand1
+mov cx,operand2
+shr ax,cl
+cmp Player_turn,1
+je changein2
+jmp changein1
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ShiftL:
+cmp operand1_btn,16
+jb chk_shl_cond
+jmp Errors
+
+chk_shl_cond:
+cmp operand2_btn,16 ;(immediate)
+je cond_shl_true
+
+cmp operand2_btn,13 ;(CL)
+jne Errors
+
+cond_shl_true:
+
+;bet0_31:
+cmp operand2,32
+jae Errors
+
+mov ax,operand1
+mov cx,operand2
+shl ax,cl
+cmp Player_turn,1
+je changein2
+jmp changein1
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;-------------------------------------------------Division-----------------------------------------------
+Division:
+cmp operand1,0h   ;Division by zero error
+jz Errors
+cmp operand1_btn,7h
+jbe STbitdiv
+Div_check_halfReg:
+cmp operand1_btn,16h
+ja AddressingMode2
+;;;;;;;;;8 Bit Mul;;;;;;;;;
+Ebitdiv:
+cmp Player_turn,1
+je Echangein2_4
+jmp Echangein1_4
+
+Echangein2_4:
+mov mode,1           ;To div With AX
+convrt_string_hex P2_regs,mode
+mov ax,cx
+mov bx,operand1
+mov bh,0
+div bl
+mov RegToBeUpdated,0h      ;AH will be the Remainder, and AL will be the Quotient
+mov Player_num,2h
+UpdateRegValue Player_num,RegToBeUpdated
+jmp Exit1
+
+Echangein1_4:
+mov mode,1 ;To div With AX
+convrt_string_hex P1_regs,mode
+mov ax,cx
+mov bx,operand1
+mov bh,0
+div bl
+mov RegToBeUpdated,0h
+mov Player_num,1h
+UpdateRegValue Player_num,RegToBeUpdated
+jmp Exit1
+;;;;;;;; 16 Bit Mul ;;;;;;;;;
+STbitdiv:
+cmp Player_turn,1
+je STchangein2_4
+jmp STchangein1_4
+
+STchangein2_4:
+mov mode,1           ;To div With AX
+convrt_string_hex P2_regs,mode
+mov ax,cx
+mov bx,operand1
+div bx
+mov Temp_Mul,dx
+mov RegToBeUpdated,0h      ;AX will be the Quotient ,and DX will be the remainder
+mov Player_num,2h
+UpdateRegValue Player_num,RegToBeUpdated
+mov ax,Temp_Mul
+mov RegToBeUpdated,3h
+mov Player_num,2h
+UpdateRegValue Player_num,RegToBeUpdated
+jmp Exit1
+
+STchangein1_4:
+mov mode,1           ;To div With AX
+convrt_string_hex P1_regs,mode
+mov ax,cx
+mov bx,operand1
+div bx
+mov Temp_Mul,dx
+mov RegToBeUpdated,0h     ;AX will be the Quotient ,and DX will be the remainder
+mov Player_num,1h
+UpdateRegValue Player_num,RegToBeUpdated
+mov ax,Temp_Mul
+mov RegToBeUpdated,3h
+mov Player_num,1h
+UpdateRegValue Player_num,RegToBeUpdated
+jmp Exit1
+AddressingMode2:
+;----------------------------------------------Multiplication--------------------------------------------
+Multiplication:
+cmp operand1_btn,7h
+jbe STbitmul
+Mul_check_halfReg:
+cmp operand1_btn,16h
+ja AddressingMode
+;;;;;;;;;8 Bit Mul;;;;;;;;;
+Ebitmul:
+cmp Player_turn,1
+je Echangein25
+jmp Echangein15
+
+Echangein25:
+mov mode,1           ;To mul With AX
+convrt_string_hex P2_regs,mode
+mov ax,cx
+mov bx,operand1
+mov bh,0
+mul bl
+mov RegToBeUpdated,0h
+mov Player_num,2h
+UpdateRegValue Player_num,RegToBeUpdated
+jmp Exit1
+
+Echangein15:
+mov mode,1 ;To mul With AX
+convrt_string_hex P1_regs,mode
+mov ax,cx
+mov bx,operand1
+mov bh,0
+mul bl
+mov RegToBeUpdated,0h
+mov Player_num,1h
+UpdateRegValue Player_num,RegToBeUpdated
+jmp Exit1
+;;;;;;;; 16 Bit Mul ;;;;;;;;;
+STbitmul:
+cmp Player_turn,1
+je STchangein25
+jmp STchangein15
+
+STchangein25:
+mov mode,1           ;To mul With AX
+convrt_string_hex P2_regs,mode
+mov ax,cx
+mov bx,operand1
+mul bx
+mov Temp_Mul,dx
+mov RegToBeUpdated,0h
+mov Player_num,2h
+UpdateRegValue Player_num,RegToBeUpdated
+mov ax,Temp_Mul
+mov RegToBeUpdated,3h
+mov Player_num,2h
+UpdateRegValue Player_num,RegToBeUpdated
+jmp Exit1
+
+STchangein15:
+mov mode,1           ;To mul With AX
+convrt_string_hex P1_regs,mode
+mov ax,cx
+mov bx,operand1
+mul bx
+mov Temp_Mul,dx
+mov RegToBeUpdated,0h
+mov Player_num,1h
+UpdateRegValue Player_num,RegToBeUpdated
+mov ax,Temp_Mul
+mov RegToBeUpdated,3h
+mov Player_num,1h
+UpdateRegValue Player_num,RegToBeUpdated
+jmp Exit1
+AddressingMode:
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;----------------------------------------------------IDivision-----------------------------------------------
+IDivision:
+cmp operand1,0h   ;Division by zero error
+jz Errors
+cmp operand1_btn,7h
+jbe STbitIdiv
+IDiv_check_halfReg:
+cmp operand1_btn,16h
+ja AddressingMode3
+;;;;;;;;;8 Bit Mul;;;;;;;;;
+EbitIdiv:
+cmp Player_turn,1
+je Echangein2_16
+jmp Echangein1_16
+
+Echangein2_16:
+mov mode,1           ;To idiv With AX
+convrt_string_hex P2_regs,mode
+mov ax,cx
+mov bx,operand1
+mov bh,0
+Idiv bl
+mov RegToBeUpdated,0h      ;AH will be the Remainder, and AL will be the Quotient
+mov Player_num,2h
+UpdateRegValue Player_num,RegToBeUpdated
+jmp Exit1
+
+Echangein1_16:
+mov mode,1 ;To idiv With AX
+convrt_string_hex P1_regs,mode
+mov ax,cx
+mov bx,operand1
+mov bh,0
+Idiv bl
+mov RegToBeUpdated,0h
+mov Player_num,1h
+UpdateRegValue Player_num,RegToBeUpdated
+jmp Exit1
+;;;;;;;; 16 Bit Mul ;;;;;;;;;
+STbitIdiv:
+cmp Player_turn,1
+je STchangein2_16
+jmp STchangein1_16
+
+STchangein2_16:
+mov mode,1           ;To idiv With AX
+convrt_string_hex P2_regs,mode
+mov ax,cx
+mov bx,operand1
+Idiv bx
+mov Temp_Mul,dx
+mov RegToBeUpdated,0h      ;AX will be the Quotient ,and DX will be the remainder
+mov Player_num,2h
+UpdateRegValue Player_num,RegToBeUpdated
+mov ax,Temp_Mul
+mov RegToBeUpdated,3h
+mov Player_num,2h
+UpdateRegValue Player_num,RegToBeUpdated
+jmp Exit1
+
+STchangein1_16:
+mov mode,1           ;To idiv With AX
+convrt_string_hex P1_regs,mode
+mov ax,cx
+mov bx,operand1
+Idiv bx
+mov Temp_Mul,dx
+mov RegToBeUpdated,0h     ;AX will be the Quotient ,and DX will be the remainder
+mov Player_num,1h
+UpdateRegValue Player_num,RegToBeUpdated
+mov ax,Temp_Mul
+mov RegToBeUpdated,3h
+mov Player_num,1h
+UpdateRegValue Player_num,RegToBeUpdated
+jmp Exit1
+AddressingMode3:
+;--------------------------------------------------IMultiplication-------------------------------------------
+IMultiplication:
+cmp operand1_btn,7h
+jbe STbitImul
+IMul_check_halfReg:
+cmp operand1_btn,16h
+ja AddressingMode1
+;;;;;;;;;8 Bit Mul;;;;;;;;;
+EbitImul:
+cmp Player_turn,1
+je Echangein2_17
+jmp Echangein1_17
+
+Echangein2_17:
+mov mode,1           ;To mul With AX
+convrt_string_hex P2_regs,mode
+mov ax,cx
+mov bx,operand1
+mov bh,0
+Imul bl
+mov RegToBeUpdated,0h
+mov Player_num,2h
+UpdateRegValue Player_num,RegToBeUpdated
+jmp Exit1
+
+Echangein1_17:
+mov mode,1 ;To mul With AX
+convrt_string_hex P1_regs,mode
+mov ax,cx
+mov bx,operand1
+mov bh,0
+Imul bl
+mov RegToBeUpdated,0h
+mov Player_num,1h
+UpdateRegValue Player_num,RegToBeUpdated
+jmp Exit1
+;;;;;;;; 16 Bit Mul ;;;;;;;;;
+STbitImul:
+cmp Player_turn,1
+je STchangein2_17
+jmp STchangein1_17
+
+STchangein2_17:
+mov mode,1           ;To mul With AX
+convrt_string_hex P2_regs,mode
+mov ax,cx
+mov bx,operand1
+Imul bx
+mov Temp_Mul,dx
+mov RegToBeUpdated,0h
+mov Player_num,2h
+UpdateRegValue Player_num,RegToBeUpdated
+mov ax,Temp_Mul
+mov RegToBeUpdated,3h
+mov Player_num,2h
+UpdateRegValue Player_num,RegToBeUpdated
+jmp Exit1
+
+STchangein1_17:
+mov mode,1           ;To mul With AX
+convrt_string_hex P1_regs,mode
+mov ax,cx
+mov bx,operand1
+Imul bx
+mov Temp_Mul,dx
+mov RegToBeUpdated,0h
+mov Player_num,1h
+UpdateRegValue Player_num,RegToBeUpdated
+mov ax,Temp_Mul
+mov RegToBeUpdated,3h
+mov Player_num,1h
+UpdateRegValue Player_num,RegToBeUpdated
+jmp Exit1
+AddressingMode1:
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Move:
 ;Move Validations ;; RegIndirect, direct addressing should be handled as well !!
 cmp operand1_btn,7
@@ -830,9 +1211,17 @@ mov Player_num,1h
 UpdateRegValue Player_num,RegToBeUpdated
 jmp Exit1
 Errors:
-
-
-
+cmp Player_turn,1
+je p1mistake
+jmp p2mistake
+p1mistake:
+mov points_inc_index,1
+mov points_inc_value,1
+DecrementPoints points_inc_index,points_inc_value
+p2mistake:
+mov points_inc_index,2
+mov points_inc_value,1
+DecrementPoints points_inc_index,points_inc_value
 Exit1:
 
 

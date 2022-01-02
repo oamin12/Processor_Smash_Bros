@@ -101,6 +101,9 @@ convrt_string_hex MACRO STR,mode
     sub cl,37h
     
     continue1:
+
+    cmp mode,3
+    jz exit
     ;------------------
     ;Second digit
     mov al,[di+2]
@@ -184,7 +187,7 @@ ENDM convrt_string_hex
 
 
 UpdateRegValue MACRO p_num, reg_num
-Local reg_AX_p1, reg_BX_p1,reg_CX_p1,reg_DX_p1,reg_SI_p1,reg_DI_p1,reg_SP_p1,reg_BP_p1,Reg_byte_player1,reg_AH_p1,reg_AL_p1,reg_BH_p1,reg_BL_p1,reg_CH_p1,reg_CL_p1,reg_DH_p1,reg_DL_p1,PLAYER_2_REGS,reg_AX_p2,reg_BX_p2,reg_CX_p2,reg_DX_p2,reg_SI_p2,reg_DI_p2,reg_SP_p2,reg_BP_p2,Reg_byte_player2,reg_AH_p2,reg_AL_p2,reg_BH_p2,reg_BL_p2,reg_CH_p2,reg_CL_p2,reg_DH_p2,reg_DL_p2,exit_updt    
+    Local reg_AX_p1, reg_BX_p1,reg_CX_p1,reg_DX_p1,reg_SI_p1,reg_DI_p1,reg_SP_p1,reg_BP_p1,Reg_byte_player1,reg_AH_p1,reg_AL_p1,reg_BH_p1,reg_BL_p1,reg_CH_p1,reg_CL_p1,reg_DH_p1,reg_DL_p1,PLAYER_2_REGS,reg_AX_p2,reg_BX_p2,reg_CX_p2,reg_DX_p2,reg_SI_p2,reg_DI_p2,reg_SP_p2,reg_BP_p2,Reg_byte_player2,reg_AH_p2,reg_AL_p2,reg_BH_p2,reg_BL_p2,reg_CH_p2,reg_CL_p2,reg_DH_p2,reg_DL_p2,exit_updt
    
     Convrt_Hex_String ;takes the new value from AX and converts it to string in num_placeholder variable
     
@@ -406,7 +409,7 @@ Local reg_AX_p1, reg_BX_p1,reg_CX_p1,reg_DX_p1,reg_SI_p1,reg_DI_p1,reg_SP_p1,reg
     jmp exit_updt
 
     ;8-bit registers-----------------------------------------------
-    
+
     Reg_byte_player2:
     add si,2
 
@@ -481,3 +484,536 @@ Local reg_AX_p1, reg_BX_p1,reg_CX_p1,reg_DX_p1,reg_SI_p1,reg_DI_p1,reg_SP_p1,reg
     ResetPlaceholder
 
 ENDM UpdateRegValue
+
+
+UpdateDataSegmentValue MACRO p_num, address, mode ;player number, adress 0->8, 1->16bit, 2->update8bits
+    local updt_oneSegment_p1,updt_oneSegment_p2,player2_data,exit_updtdatasegment,data_0_p1,data_1_p1,data_2_p1,data_3_p1,data_4_p1,data_5_p1,data_6_p1,data_7_p1,data_8_p1,data_0_p2,data_1_p2,data_2_p2,data_3_p2,data_4_p2,data_5_p2,data_6_p2,data_7_p2,data_8_p2,data_0_p11,data_1_p11,data_2_p11,data_3_p11,data_4_p11,data_5_p11,data_6_p11,data_7_p11,data_8_p11,data_0_p22,data_1_p22,data_2_p22,data_3_p22,data_4_p22,data_5_p22,data_6_p22,data_7_p22,data_8_p22
+
+    Convrt_Hex_String ;takes the new value from AX and converts it to string in num_placeholder variable
+    mov si,offset num_placeholder
+
+    cmp p_num,2
+    jz player2_data
+
+
+    cmp mode,2
+    jz updt_oneSegment_p1
+
+    mov cx,2
+
+    cmp address,0
+    jz data_0_p11
+
+    cmp address,1
+    jz data_1_p11
+
+    cmp address,2
+    jz data_2_p11
+
+    cmp address,3
+    jz data_3_p11
+
+    cmp address,4
+    jz data_4_p11
+
+    cmp address,5
+    jz data_5_p11
+
+    cmp address,6
+    jz data_6_p11
+
+    cmp address,7
+    jz data_7_p11
+
+    cmp address,8
+    jz data_8_p11
+
+    ;------------------------------------------
+    data_0_p11:
+    mov di,offset P1_ds[3]
+    rep movsb
+    mov cx,2
+    mov di,offset P1_ds
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_1_p11:
+    mov di,offset P1_ds[6]
+    rep movsb
+    mov cx,2
+    mov di,offset P1_ds[3]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_2_p11:
+    mov di,offset P1_ds[9]
+    rep movsb
+    mov cx,2
+    mov di,offset P1_ds[6]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_3_p11:
+    mov di,offset P1_ds[12]
+    rep movsb
+    mov cx,2
+    mov di,offset P1_ds[9]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_4_p11:
+    mov di,offset P1_ds[15]
+    rep movsb
+    mov cx,2
+    mov di,offset P1_ds[12]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_5_p11:
+    mov di,offset P1_ds[18]
+    rep movsb
+    mov cx,2
+    mov di,offset P1_ds[15]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_6_p11:
+    mov di,offset P1_ds[21]
+    rep movsb
+    mov cx,2
+    mov di,offset P1_ds[18]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_7_p11:
+    mov di,offset P1_ds[24]
+    rep movsb
+    mov cx,2
+    mov di,offset P1_ds[21]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_8_p11:
+    mov di,offset P1_ds
+    rep movsb
+    mov cx,2
+    mov di,offset P1_ds[24]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+
+
+    jmp exit_updtdatasegment
+    ;-----------------------------------
+    ;-----------------------------------
+    updt_oneSegment_p1:
+    add si,2
+    mov cx,2
+
+    cmp address,0
+    jz data_0_p1
+
+    cmp address,1
+    jz data_1_p1
+
+    cmp address,2
+    jz data_2_p1
+
+    cmp address,3
+    jz data_3_p1
+
+    cmp address,4
+    jz data_4_p1
+
+    cmp address,5
+    jz data_5_p1
+
+    cmp address,6
+    jz data_6_p1
+
+    cmp address,7
+    jz data_7_p1
+
+    cmp address,8
+    jz data_8_p1
+
+
+
+    data_0_p1:
+    mov di,offset P1_ds
+    
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_1_p1:
+    mov di,offset P1_ds[3]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_2_p1:
+    mov di,offset P1_ds[6]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_3_p1:
+    mov di,offset P1_ds[9]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_4_p1:
+    mov di,offset P1_ds[12]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_5_p1:
+    mov di,offset P1_ds[15]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_6_p1:
+    mov di,offset P1_ds[18]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_7_p1:
+    mov di,offset P1_ds[21]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_8_p1:
+    mov di,offset P1_ds[24]
+    rep movsb   
+    jmp exit_updtdatasegment
+    
+
+    ;-----------------------------------------
+    player2_data:
+
+    cmp mode,2
+    jz updt_oneSegment_p2
+
+    mov cx,2
+
+    cmp address,0
+    jz data_0_p22
+
+    cmp address,1
+    jz data_1_p22
+
+    cmp address,2
+    jz data_2_p22
+
+    cmp address,3
+    jz data_3_p22
+
+    cmp address,4
+    jz data_4_p22
+
+    cmp address,5
+    jz data_5_p22
+
+    cmp address,6
+    jz data_6_p22
+
+    cmp address,7
+    jz data_7_p22
+
+    cmp address,8
+    jz data_8_p22
+
+    ;------------------------------------------
+    data_0_p22:
+    mov di,offset P2_ds[3]
+    rep movsb
+    mov cx,2
+    mov di,offset P2_ds
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_1_p22:
+    mov di,offset P2_ds[6]
+    rep movsb
+    mov cx,2
+    mov di,offset P2_ds[3]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_2_p22:
+    mov di,offset P2_ds[9]
+    rep movsb
+    mov cx,2
+    mov di,offset P2_ds[6]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_3_p22:
+    mov di,offset P2_ds[12]
+    rep movsb
+    mov cx,2
+    mov di,offset P2_ds[9]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_4_p22:
+    mov di,offset P2_ds[15]
+    rep movsb
+    mov cx,2
+    mov di,offset P2_ds[12]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_5_p22:
+    mov di,offset P2_ds[18]
+    rep movsb
+    mov cx,2
+    mov di,offset P2_ds[15]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_6_p22:
+    mov di,offset P2_ds[21]
+    rep movsb
+    mov cx,2
+    mov di,offset P2_ds[18]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_7_p22:
+    mov di,offset P2_ds[24]
+    rep movsb
+    mov cx,2
+    mov di,offset P2_ds[21]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_8_p22:
+    mov di,offset P2_ds
+    rep movsb
+    mov cx,2
+    mov di,offset P2_ds[24]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+
+    jmp exit_updtdatasegment
+    ;------------------------------------------
+    updt_oneSegment_p2:
+    add si,2
+    mov cx,2
+
+    cmp address,0
+    jz data_0_p2
+
+    cmp address,1
+    jz data_1_p2
+
+    cmp address,2
+    jz data_2_p2
+
+    cmp address,3
+    jz data_3_p2
+
+    cmp address,4
+    jz data_4_p2
+
+    cmp address,5
+    jz data_5_p2
+
+    cmp address,6
+    jz data_6_p2
+
+    cmp address,7
+    jz data_7_p2
+
+    cmp address,8
+    jz data_8_p2
+
+
+
+    data_0_p2:
+    add si,2
+    mov di,offset P2_ds
+    
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_1_p2:
+    mov di,offset P2_ds[3]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_2_p2:
+    mov di,offset P2_ds[6]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_3_p2:
+    mov di,offset P2_ds[9]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_4_p2:
+    mov di,offset P2_ds[12]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_5_p2:
+    mov di,offset P2_ds[15]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_6_p2:
+    mov di,offset P2_ds[18]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_7_p2:
+    mov di,offset P2_ds[21]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_8_p2:
+    mov di,offset P2_ds[24]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+
+    ;ERROR_updtdatasegment:
+    ;mov DataSegment_error,1
+
+
+    exit_updtdatasegment:
+
+    ResetPlaceholder
+
+ENDM UpdateDataSegmentValue
+
+
+
+
+GetDataSegmentValue MACRO pnum,address ;little indian lw 3ayez 1 dakhalo 0 w khod ch
+    local exit_getdatasegmentvalue,player2,data_01_p1,data_23_p1,data_45_p1,data_67_p1,data_80_p1,data_01_p2,data_23_p2,data_45_p2,data_67_p2,data_80_p2
+    ;convrt_string_hex MACRO STR,mode 
+    ;This macro always returns 2 data slots in CH:CL respectively
+    ;e.g: address =1 , therefore CX= addr[2]:addr[1] both of them, if u need the exact address u sent (8bits slot) use CH
+    ;NOTE: address values: 0, 2, 4, 6, 8
+
+    cmp pnum,2
+    jz player2
+
+    mov get_datasegment_mode,2
+
+    cmp address,0
+    jz data_01_p1
+
+    cmp address,2
+    jz data_23_p1
+
+    cmp address,4
+    jz data_45_p1
+
+    cmp address,6
+    jz data_67_p1
+
+    cmp address,8
+    jz data_80_p1
+    
+
+    
+    data_01_p1:
+    convrt_string_hex P1_ds-2,get_datasegment_mode
+    mov temp1,cl
+    convrt_string_hex P1_ds+1,get_datasegment_mode
+    mov ch,temp1
+    xchg ch,cl
+    jmp exit_getdatasegmentvalue
+
+
+    data_23_p1:
+    convrt_string_hex P1_ds+4,get_datasegment_mode
+    xchg ch,cl
+    convrt_string_hex P1_ds+7,get_datasegment_mode
+    jmp exit_getdatasegmentvalue
+
+
+    data_45_p1:
+    convrt_string_hex P1_ds+10,get_datasegment_mode
+    xchg ch,cl
+    convrt_string_hex P1_ds+13,get_datasegment_mode
+    jmp exit_getdatasegmentvalue
+
+
+    data_67_p1:
+    convrt_string_hex P1_ds+16,get_datasegment_mode
+    xchg ch,cl
+    convrt_string_hex P1_ds+19,get_datasegment_mode
+    jmp exit_getdatasegmentvalue
+
+
+    data_80_p1:
+    convrt_string_hex P1_ds+22,get_datasegment_mode
+    xchg ch,cl
+    convrt_string_hex P1_ds-2,get_datasegment_mode
+    jmp exit_getdatasegmentvalue
+
+
+    ;-----------------------------------
+    player2:
+
+    cmp address,0
+    jz data_01_p2
+
+    cmp address,2
+    jz data_23_p2
+
+    cmp address,4
+    jz data_45_p2
+
+    cmp address,6
+    jz data_67_p2
+
+    cmp address,8
+    jz data_80_p2
+    
+
+    
+    data_01_p2:
+    convrt_string_hex P2_ds-2,get_datasegment_mode
+    mov temp1,cl
+    convrt_string_hex P2_ds+1,get_datasegment_mode
+    mov ch,temp1
+    xchg ch,cl
+    jmp exit_getdatasegmentvalue
+
+
+    data_23_p2:
+    convrt_string_hex P2_ds+4,get_datasegment_mode
+    xchg ch,cl
+    convrt_string_hex P2_ds+7,get_datasegment_mode
+    jmp exit_getdatasegmentvalue
+
+
+    data_45_p2:
+    convrt_string_hex P2_ds+10,get_datasegment_mode
+    xchg ch,cl
+    convrt_string_hex P2_ds+13,get_datasegment_mode
+    jmp exit_getdatasegmentvalue
+
+
+    data_67_p2:
+    convrt_string_hex P2_ds+16,get_datasegment_mode
+    xchg ch,cl
+    convrt_string_hex P2_ds+19,get_datasegment_mode
+    jmp exit_getdatasegmentvalue
+
+
+    data_80_p2:
+    convrt_string_hex P2_ds+22,get_datasegment_mode
+    xchg ch,cl
+    convrt_string_hex P2_ds-2,get_datasegment_mode
+    jmp exit_getdatasegmentvalue
+    
+
+
+    exit_getdatasegmentvalue:
+ENDM GetDataSegmentValue    

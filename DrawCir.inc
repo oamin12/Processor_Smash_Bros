@@ -3,11 +3,8 @@ local loop100,JUMP1,JUMP2,JUMP3,JUMP4,STOP
 ;plot the center
         mov ah,0ch
         mov al,clr
-        ;mov cx,xcm
-        ;mov dx,ycm
-        ;int 10h
-        
-        ;draw circle(midpoint algorithm)
+     
+        ;draw circle using (midpoint algorithm)
         ;y=r
         mov ax,r 
         mov yc,ax
@@ -61,10 +58,7 @@ local loop100,JUMP1,JUMP2,JUMP3,JUMP4,STOP
         ;plot point
         Plot xcm,ycm,xc,yc,clr
         jmp loop100
-    ;jump1:  mov ah,00
-        ;int 16h
-        ;mov ax,0003
-        ;int 10h
+
         
     stop:
         mov xc,0
