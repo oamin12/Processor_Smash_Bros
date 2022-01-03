@@ -1,12 +1,12 @@
-Gun MACRO x1,y1
-    ;local addpos,loop1,loop2,loop3,loop4,loop6,loop5,repeat,Exit,yellow,red,green,purble,skipclr,skipaddpos,cmpcolumn,cmpcolumn2,Exit1,incyellow,incred,incgreen,incpurble
-    mov x1,120
-    mov y1,180
+Gun2 MACRO x1,y1
+    local addpos,loop1,loop2,loop3,loop4,loop6,loop5,repeat,Exit,yellow,red,green,purble,skipclr,skipaddpos,cmpcolumn,cmpcolumn2,Exit1,incyellow,incred,incgreen,incpurble
+
+
     MOV AH, 00h  ; interrupts to get system time
     int 1AH      ; CX:DX now hold number of clock ticks since midnight
     mov  ax, dx
     xor  dx, dx
-    mov  cx, 3d
+    mov  cx, 4d
     div  cx       ;here dx contains the remainder of the division - from 0 to 3
     cmp dx,0
     je yellow
@@ -45,16 +45,16 @@ Gun MACRO x1,y1
     addpos:
     add dx,10
     skipaddpos:
-
-
+    add dx,320
+    
     mov xo,dx ; random column
     ;mov xo,50
     mov yo,10
     mov ro,10
     ;mov clro,4h
-    DrawCir xo,yo,xc,yc,p,ro,clro
+    DrawCir xo,yo,xc,yc,p,ro,clro 
 
-    loop1:
+    loop1: 
     DrawTri x1,y1,4 ;;GUN POSITION
     DrawCir xo,yo,xc,yc,p,ro,00
     inc yo
@@ -78,7 +78,7 @@ Gun MACRO x1,y1
     mov al,0
     int 21h
     hlt    ;flushing keyboard buffer
-    jmp loop1
+    jmp loop1    
 
 loop2:
 DrawTri x1,y1,0
@@ -113,13 +113,13 @@ mov ah,0ch
 hlt
 jmp loop1
 
-loop5:
+loop5: 
 DrawTri x1,y1,0
 add x1,4
 DrawTri x1,y1,4
 mov ah,0ch
 mov al,0
-int 21h
+int 21h 
 
 hlt
 jmp loop1
@@ -130,23 +130,23 @@ loop6: ;for projectile
 mov cx,x1
 mov dx,y1
 
-mov xcm,cx
+mov xcm,cx 
 mov ycm,dx
 mov r,3
 mov clr,0Ah
 
 repeat:
 
-DrawCir xcm,ycm,xc,yc,p,r,00
+DrawCir xcm,ycm,xc,yc,p,r,00 
 dec ycm
 
-DrawCir xcm,ycm,xc,yc,p,r,0Ah
-
-
+DrawCir xcm,ycm,xc,yc,p,r,0Ah 
+    
+    
 DrawCir xo,yo,xc,yc,p,ro,00
 inc yo
 
-DrawCir xo,yo,xc,yc,p,ro,clro
+DrawCir xo,yo,xc,yc,p,ro,clro 
 mov ax,yo
 cmp ycm,ax
 jbe cmpcolumn
@@ -154,7 +154,7 @@ cmp ycm,5 ;;check the position of the projectile "must be edited for targets" ;;
 hlt
 jnz repeat
 
-jmp Exit
+jmp Exit 
 
 cmpcolumn:
 mov ax,xcm ;;projectile
@@ -191,46 +191,49 @@ cmp clro,0Dh
 je incpurble
 
 incyellow:
-mov points_inc_index,1
+mov points_inc_index,2
 mov points_inc_value,1
 IncrementPoints points_inc_index,points_inc_value
-mov Ah,LFallObjY1
+mov Ah,LFallObjY2
 add Ah,30h
 inc AH
 sub Ah,30h
-mov LFallObjY1,ah
+mov LFallObjY2,ah
 jmp Exit
 incred:
-mov points_inc_index,1
+mov points_inc_index,2
 mov points_inc_value,2
 IncrementPoints points_inc_index,points_inc_value
-mov Ah,LFallObjR1
+mov Ah,LFallObjR2
 add Ah,30h
 inc AH
 sub Ah,30h
-mov LFallObjR1,ah
+mov LFallObjR2,ah
 jmp Exit
 incgreen:
-mov points_inc_index,1
+mov points_inc_index,2
 mov points_inc_value,4
 IncrementPoints points_inc_index,points_inc_value
-mov Ah,LFallObjG1
+mov Ah,LFallObjG2
 add Ah,30h
 inc AH
 sub Ah,30h
-mov LFallObjG1,ah
+mov LFallObjG2,ah
 jmp Exit
 incpurble:
-mov points_inc_index,1
+mov points_inc_index,2
 mov points_inc_value,8
 IncrementPoints points_inc_index,points_inc_value
-mov Ah,LFallObjP1
+mov Ah,LFallObjP2
 add Ah,30h
 inc AH
 sub Ah,30h
-mov LFallObjP1,ah
+mov LFallObjP2,ah
 jmp Exit
 
+DrawCir xcm,ycm,xc,yc,p,r,00
+DrawCir xo,yo,xc,yc,p,ro,00
+DrawTri x1,y1,00
 Exit:
 
 DrawCir xcm,ycm,xc,yc,p,r,00
@@ -241,5 +244,5 @@ mov ah,0ch
 mov al,0
 int 21h
 
-
-ENDM Gun
+    
+ENDM Gun2

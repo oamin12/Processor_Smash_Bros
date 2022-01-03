@@ -1,42 +1,42 @@
 Ops MACRO btn_num
 Local firstReg,axb1,bxb1,cxb1,dxb1,sib1,dib1,spb1,bpb1,ahb1,alb1,bhb1,blb1,chb1,clb1,dhb1,dlb1,p2_AX,p2_BX,p2_CX,p2_DX,p2_SI,p2_SP,p2_DI,p2_BP,p2_AH,p2_AL,p2_BH,p2_BL,p2_CH,p2_CL,p2_DH,p2_DL,getop2,axb2,bxb2,cxb2,dxb2,sib2,dib2,spb2,bpb2,ahb2,alb2,bhb2,blb2,chb2,clb2,dhb2,dlb2,immediateaddb2,p2_AX2,p2_BX2,p2_CX2,p2_DX2,p2_SI2,p2_DI2,p2_SP2,p2_BP2,p2_AH2,p2_AL2,p2_BH2,p2_BL2,p2_CH2,p2_CL2,p2_DH2,p2_DL2,p2_imm,changein2,changein1,Addition,Exit1,skipp,chk_not_8bits,chk_not_16bits,Errors,skipE,check_halfReg,chk_not_8bits1,chk_not_16bits1,check_halfReg1,skipE1,AddwithCarry,Subtract,chk_not_8bits2,chk_not_16bits2,check_halfReg2,skipE2,SubwB,chk_not_8bits3,chk_not_16bits3,check_halfReg3,skipE3,Xoring,chk_not_8bits6,chk_not_16bits6,check_halfReg6,skipE6,Anding,chk_not_8bits7,chk_not_16bits7,check_halfReg7,skipE7,Oring,chk_not_8bits8,chk_not_16bits8,check_halfReg8,skipE8
 mov cmndStringLength,0
-   
+
 firstReg:
 mov ah,0ch
 mov al,0
 int 21h
 mov ah,0
 int 16h
-Call Getbtnclicked 
+Call Getbtnclicked
 mov operand1_btn,al
 cmp ax,0ffffh
-jz firstReg 
-cmp ax, 0 
+jz firstReg
+cmp ax, 0
 jz axb1
-cmp ax, 1 
-jz bxb1   
-cmp ax, 2 
+cmp ax, 1
+jz bxb1
+cmp ax, 2
 jz cxb1
-cmp ax, 3 
+cmp ax, 3
 jz dxb1
-cmp ax, 4 
+cmp ax, 4
 jz sib1
-cmp ax, 5 
+cmp ax, 5
 jz dib1
-cmp ax, 6 
+cmp ax, 6
 jz spb1
-cmp ax, 7 
+cmp ax, 7
 jz bpb1
-cmp ax, 8 
+cmp ax, 8
 jz ahb1
-cmp ax, 9 
+cmp ax, 9
 jz alb1
 cmp ax, 10
 jz bhb1
 cmp ax, 11
 jz blb1
-cmp ax, 12 
+cmp ax, 12
 jz chb1
 cmp ax, 13
 jz clb1
@@ -365,7 +365,7 @@ getop2:
         cmp OpBtn,4    ;No operand2 for DIV
         jz skipp
         cmp OpBtn,5    ;No operand2 for MUL
-        jz skipp 
+        jz skipp
         cmp OpBtn,13   ;No operand2 for INC
         jz skipp
         cmp OpBtn,14   ;No operand2 for DEC
@@ -383,31 +383,31 @@ getop2:
         mov operand2_btn,al
         cmp ax,0ffffh
         jz getop2
-        cmp ax, 0 
+        cmp ax, 0
         jz axb2
-        cmp ax, 1 
+        cmp ax, 1
         jz bxb2
-        cmp ax, 2 
+        cmp ax, 2
         jz cxb2
-        cmp ax, 3 
+        cmp ax, 3
         jz dxb2
-        cmp ax, 4 
+        cmp ax, 4
         jz sib2
-        cmp ax, 5 
+        cmp ax, 5
         jz dib2
-        cmp ax, 6 
+        cmp ax, 6
         jz spb2
-        cmp ax, 7 
+        cmp ax, 7
         jz bpb2
-        cmp ax, 8 
+        cmp ax, 8
         jz ahb2
-        cmp ax, 9 
+        cmp ax, 9
         jz alb2
         cmp ax, 10
         jz bhb2
         cmp ax, 11
         jz blb2
-        cmp ax, 12 
+        cmp ax, 12
         jz chb2
         cmp ax, 13
         jz clb2
@@ -417,7 +417,7 @@ getop2:
         jz dlb2
         cmp ax, 16
         jz immediateaddb2
-        ; cmp ax, 17  
+        ; cmp ax, 17
         ; jz directaddb2
         ; cmp ax, 18
         ; jz indirectregb2

@@ -54,7 +54,7 @@ cmndStringLength            dw 0
 
 xr dw ?
 yr dw ?
- 
+
 x db ?
 y db ?
 ;;circle related variables
@@ -140,7 +140,7 @@ P2_ds   db "00$","00$","00$","00$","00$","00$","00$","00$","00$"
 DS_labels db "0$","1$","2$","3$","4$","5$","6$","7$","8$"
 db "$$$"
 trycatch db "0000$"
- 
+
 ;command buttons lables------------------
 Ladd  db "ADD$"
 Ladc  db "ADC$"
@@ -342,7 +342,7 @@ PlayGame proc near
     chng_turn2:
     mov Player_turn,2
     jmp Start_Again
-    
+
 
     hlt
     ret
@@ -432,47 +432,47 @@ AssignSmallestPts ENDP
 
 ;---------------------------------------------
 ;---------------------------------------------
- 
+
 Getbtnclicked proc near
- 
+
     noleftclick:
             mov ax,0003h
             int 33h ;CX(X), DX(Y)
             test bx,1
             jz noleftclick ;break if user clicked the left click
- 
+
     mov bx,dx
     mov dx,0
     mov ax,cx
     mov cx,64 ;58 is the btn width
     div cx    ;integer division
- 
+
     cmp bx,230
     ja under
- 
+
     mov ax,0ffffh
     jmp exit
- 
+
     under:
         cmp bx,265
         jb row_0
- 
+
         cmp bx,300
         jb row_10
- 
+
         mov ax,0ffffh
         jmp exit
- 
+
         row_0:
             add ax,0
             jmp exit
- 
+
         row_10:
             add ax,10d
- 
- 
+
+
     exit:
- 
+
     mov btn_num,ax
     ret
 Getbtnclicked endp
@@ -687,9 +687,9 @@ Gun proc near
     mov yo,10
     mov ro,10
     ;mov clro,4h
-    DrawCir xo,yo,xc,yc,p,ro,clro 
+    DrawCir xo,yo,xc,yc,p,ro,clro
 
-    loop1G: 
+    loop1G:
     DrawTri x1,y1,4 ;;GUN POSITION
     DrawCir xo,yo,xc,yc,p,ro,00
     inc yo
@@ -713,7 +713,7 @@ Gun proc near
     mov al,0
     int 21h
     hlt    ;flushing keyboard buffer
-    jmp loop1G    
+    jmp loop1G
 
 loop2G:
 DrawTri x1,y1,0
@@ -748,13 +748,13 @@ mov ah,0ch
 hlt
 jmp loop1G
 
-loop5G: 
+loop5G:
 DrawTri x1,y1,0
 add x1,4
 DrawTri x1,y1,4
 mov ah,0ch
 mov al,0
-int 21h 
+int 21h
 
 hlt
 jmp loop1G
@@ -765,23 +765,23 @@ loop6G: ;for projectile
 mov cx,x1
 mov dx,y1
 
-mov xcm,cx 
+mov xcm,cx
 mov ycm,dx
 mov r,3
 mov clr,0Ah
 
 repeatG:
 
-DrawCir xcm,ycm,xc,yc,p,r,00 
+DrawCir xcm,ycm,xc,yc,p,r,00
 dec ycm
 
-DrawCir xcm,ycm,xc,yc,p,r,0Ah 
-    
-    
+DrawCir xcm,ycm,xc,yc,p,r,0Ah
+
+
 DrawCir xo,yo,xc,yc,p,ro,00
 inc yo
 
-DrawCir xo,yo,xc,yc,p,ro,clro 
+DrawCir xo,yo,xc,yc,p,ro,clro
 mov ax,yo
 cmp ycm,ax
 jbe cmpcolumn
@@ -789,7 +789,7 @@ cmp ycm,5 ;;check the position of the projectile "must be edited for targets" ;;
 hlt
 jnz repeatG
 
-jmp ExitG 
+jmp ExitG
 
 cmpcolumn:
 mov ax,xcm ;;projectile
@@ -930,11 +930,11 @@ mov ah,0ch
 mov al,0
 int 21h
 
-ret    
+ret
 Gun endp
 
-P1regs proc near 
-    
+P1regs proc near
+
     mov ah,2
     mov dl,1   ;X-position
     mov dh,0   ;Y-position
@@ -950,40 +950,40 @@ P1regs proc near
     mov ah,9
     mov dx,offset P2_FrbdnChar+2
     int 21h
-    
+
     mov xr,60
 
     mov yr,25  ;joe old:10
-  
+
     DrawRec xr,yr
-  
+
     add yr,28  ;joe old:40
     DrawRec xr,yr
 
     add yr,28  ;joe old:40
 
     DrawRec xr,yr
-    
+
     add yr,28  ;joe old:40
     DrawRec xr,yr
 
     mov xr,125 ;joe old:120
     mov yr,25  ;joe old:10
     DrawRec xr,yr
-    
+
     add yr,28  ;joe old:40
     DrawRec xr,yr
-    
+
     add yr,28  ;joe old:40
     DrawRec xr,yr
-    
+
     add yr,28  ;joe old:40
     DrawRec xr,yr
 
      mov ah,2
      mov dl,5   ;X-position
      mov dh,2   ;Y-position
-     int 10h      
+     int 10h
      mov ah,9
      mov dx,offset Lax
      int 21h
@@ -991,7 +991,7 @@ P1regs proc near
     mov ah,2
     mov dl,5    ;X-position
     mov dh,4    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset Lbx
     int 21h
@@ -999,7 +999,7 @@ P1regs proc near
     mov ah,2
     mov dl,5    ;X-position
     mov dh,6    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset Lcx
     int 21h
@@ -1008,7 +1008,7 @@ P1regs proc near
     mov ah,2
     mov dl,5    ;X-position
     mov dh,8    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset Ldx
     int 21h
@@ -1016,7 +1016,7 @@ P1regs proc near
     mov ah,2
     mov dl,24   ;X-position
     mov dh,2    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset Lsi
     int 21h
@@ -1024,15 +1024,15 @@ P1regs proc near
     mov ah,2
     mov dl,24   ;X-position
     mov dh,4    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset Ldi
     int 21h
-    
+
     mov ah,2
     mov dl,24   ;X-position
     mov dh,6    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset Lsp
     int 21h
@@ -1040,7 +1040,7 @@ P1regs proc near
     mov ah,2
     mov dl,24   ;X-position
     mov dh,8    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset Lbp
     int 21h
@@ -1049,7 +1049,7 @@ P1regs proc near
     mov ah,2
     mov dl,9   ;X-position
     mov dh,2   ;Y-position
-    int 10h      
+    int 10h
     mov ah,9
     mov dx,offset P1_regs[0]
     int 21h
@@ -1057,7 +1057,7 @@ P1regs proc near
     mov ah,2
     mov dl,9    ;X-position
     mov dh,4    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P1_regs[5]
     int 21h
@@ -1065,7 +1065,7 @@ P1regs proc near
     mov ah,2
     mov dl,9    ;X-position
     mov dh,6    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P1_regs[10]
     int 21h
@@ -1074,7 +1074,7 @@ P1regs proc near
     mov ah,2
     mov dl,9    ;X-position
     mov dh,8    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P1_regs[15]
     int 21h
@@ -1082,7 +1082,7 @@ P1regs proc near
     mov ah,2
     mov dl,17   ;X-position
     mov dh,2    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P1_regs[20]
     int 21h
@@ -1090,15 +1090,15 @@ P1regs proc near
     mov ah,2
     mov dl,17   ;X-position
     mov dh,4    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P1_regs[25]
     int 21h
-    
+
     mov ah,2
     mov dl,17   ;X-position
     mov dh,6    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P1_regs[30]
     int 21h
@@ -1106,7 +1106,7 @@ P1regs proc near
     mov ah,2
     mov dl,17   ;X-position
     mov dh,8    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P1_regs[35]
     int 21h
@@ -1114,7 +1114,7 @@ ret
 P1regs endp
 
 P2regs proc near
-    
+
     mov ah,2
     mov dl,42   ;X-position
     mov dh,0   ;Y-position
@@ -1133,12 +1133,12 @@ P2regs proc near
 
     mov xr,380
     mov yr,25  ;joe old:10
-    
+
     DrawRec xr,yr
-    
+
     add yr,28  ;joe old:40
     DrawRec xr,yr
-    
+
     add yr,28  ;joe old:40
     DrawRec xr,yr
     add yr,28  ;joe old:40
@@ -1157,7 +1157,7 @@ P2regs proc near
     mov ah,2
     mov dl,44   ;X-position
     mov dh,2    ;Y-position
-    int 10h      
+    int 10h
     mov ah,9
     mov dx,offset Lax
     int 21h
@@ -1165,7 +1165,7 @@ P2regs proc near
     mov ah,2
     mov dl,44   ;X-position
     mov dh,4    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset Lbx
     int 21h
@@ -1173,7 +1173,7 @@ P2regs proc near
     mov ah,2
     mov dl,44   ;X-position
     mov dh,6    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset Lcx
     int 21h
@@ -1182,7 +1182,7 @@ P2regs proc near
     mov ah,2
     mov dl,44   ;X-position
     mov dh,8    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset Ldx
     int 21h
@@ -1190,7 +1190,7 @@ P2regs proc near
     mov ah,2
     mov dl,64   ;X-position
     mov dh,2    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset Lsi
     int 21h
@@ -1198,15 +1198,15 @@ P2regs proc near
     mov ah,2
     mov dl,64   ;X-position
     mov dh,4    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset Ldi
     int 21h
-    
+
     mov ah,2
     mov dl,64   ;X-position
     mov dh,6    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset Lsp
     int 21h
@@ -1214,7 +1214,7 @@ P2regs proc near
     mov ah,2
     mov dl,64   ;X-position
     mov dh,8    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset Lbp
     int 21h
@@ -1224,7 +1224,7 @@ P2regs proc near
     mov ah,2
     mov dl,49   ;X-position
     mov dh,2    ;Y-position
-    int 10h      
+    int 10h
     mov ah,9
     mov dx,offset P2_regs[0]
     int 21h
@@ -1232,7 +1232,7 @@ P2regs proc near
     mov ah,2
     mov dl,49   ;X-position
     mov dh,4    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P2_regs[5]
     int 21h
@@ -1240,7 +1240,7 @@ P2regs proc near
     mov ah,2
     mov dl,49   ;X-position
     mov dh,6    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P2_regs[10]
     int 21h
@@ -1249,7 +1249,7 @@ P2regs proc near
     mov ah,2
     mov dl,49   ;X-position
     mov dh,8    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P2_regs[15]
     int 21h
@@ -1257,7 +1257,7 @@ P2regs proc near
     mov ah,2
     mov dl,57   ;X-position
     mov dh,2    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P2_regs[20]
     int 21h
@@ -1265,15 +1265,15 @@ P2regs proc near
     mov ah,2
     mov dl,57   ;X-position
     mov dh,4    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P2_regs[25]
     int 21h
-    
+
     mov ah,2
     mov dl,57   ;X-position
     mov dh,6    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P2_regs[30]
     int 21h
@@ -1281,7 +1281,7 @@ P2regs proc near
     mov ah,2
     mov dl,57   ;X-position
     mov dh,8    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P2_regs[35]
     int 21h
@@ -1289,12 +1289,12 @@ ret
 P2regs endp
 
 Update_P1ds proc near
-    
+
     ;Data Segment values-----------------
     mov ah,2
     mov dl,34   ;X-position
     mov dh,0   ;Y-position
-    int 10h      
+    int 10h
     mov ah,9
     mov dx,offset P1_ds[0]
     int 21h
@@ -1302,7 +1302,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,34   ;X-position
     mov dh,2   ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P1_ds[3]
     int 21h
@@ -1310,7 +1310,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,34    ;X-position
     mov dh,4    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P1_ds[6]
     int 21h
@@ -1319,7 +1319,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,34    ;X-position
     mov dh,6    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P1_ds[9]
     int 21h
@@ -1327,7 +1327,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,34   ;X-position
     mov dh,8d    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P1_ds[12]
     int 21h
@@ -1335,15 +1335,15 @@ Update_P1ds proc near
     mov ah,2
     mov dl,34   ;X-position
     mov dh,10d    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P1_ds[15]
     int 21h
-    
+
     mov ah,2
     mov dl,34   ;X-position
     mov dh,12d    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P1_ds[18]
     int 21h
@@ -1351,7 +1351,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,34   ;X-position
     mov dh,13d    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P1_ds[21]
     int 21h
@@ -1359,7 +1359,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,34   ;X-position
     mov dh,15d    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P1_ds[24]
     int 21h
@@ -1370,7 +1370,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,38   ;X-position
     mov dh,0   ;Y-position
-    int 10h      
+    int 10h
     mov ah,9
     mov dx,offset DS_labels[0]
     int 21h
@@ -1378,7 +1378,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,38   ;X-position
     mov dh,2   ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset DS_labels[2]
     int 21h
@@ -1386,7 +1386,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,38    ;X-position
     mov dh,4    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset DS_labels[4]
     int 21h
@@ -1395,7 +1395,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,38    ;X-position
     mov dh,6    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset DS_labels[6]
     int 21h
@@ -1403,7 +1403,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,38   ;X-position
     mov dh,8d    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset DS_labels[8]
     int 21h
@@ -1411,15 +1411,15 @@ Update_P1ds proc near
     mov ah,2
     mov dl,38   ;X-position
     mov dh,10d    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset DS_labels[10]
     int 21h
-    
+
     mov ah,2
     mov dl,38   ;X-position
     mov dh,12d    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset DS_labels[12]
     int 21h
@@ -1427,7 +1427,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,38   ;X-position
     mov dh,13d    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset DS_labels[14]
     int 21h
@@ -1435,7 +1435,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,38   ;X-position
     mov dh,15d    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset DS_labels[16]
     int 21h
@@ -1444,12 +1444,12 @@ ret
 Update_P1ds endp
 
 Update_P2ds proc near
-    
+
     ;Data Segment values-----------------
     mov ah,2
     mov dl,74   ;X-position
     mov dh,0   ;Y-position
-    int 10h      
+    int 10h
     mov ah,9
     mov dx,offset P2_ds[0]
     int 21h
@@ -1457,7 +1457,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,74   ;X-position
     mov dh,2   ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P2_ds[3]
     int 21h
@@ -1465,7 +1465,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,74    ;X-position
     mov dh,4    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P2_ds[6]
     int 21h
@@ -1474,7 +1474,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,74    ;X-position
     mov dh,6    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P2_ds[9]
     int 21h
@@ -1482,7 +1482,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,74   ;X-position
     mov dh,8d    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P2_ds[12]
     int 21h
@@ -1490,15 +1490,15 @@ Update_P2ds proc near
     mov ah,2
     mov dl,74   ;X-position
     mov dh,10d    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P2_ds[15]
     int 21h
-    
+
     mov ah,2
     mov dl,74   ;X-position
     mov dh,12d    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P2_ds[18]
     int 21h
@@ -1506,7 +1506,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,74   ;X-position
     mov dh,13d    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P2_ds[21]
     int 21h
@@ -1514,7 +1514,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,74   ;X-position
     mov dh,15d    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset P2_ds[24]
     int 21h
@@ -1525,7 +1525,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,78   ;X-position
     mov dh,0   ;Y-position
-    int 10h      
+    int 10h
     mov ah,9
     mov dx,offset DS_labels[0]
     int 21h
@@ -1533,7 +1533,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,78   ;X-position
     mov dh,2   ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset DS_labels[2]
     int 21h
@@ -1541,7 +1541,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,78    ;X-position
     mov dh,4    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset DS_labels[4]
     int 21h
@@ -1550,7 +1550,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,78    ;X-position
     mov dh,6    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset DS_labels[6]
     int 21h
@@ -1558,7 +1558,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,78   ;X-position
     mov dh,8d    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset DS_labels[8]
     int 21h
@@ -1566,15 +1566,15 @@ Update_P2ds proc near
     mov ah,2
     mov dl,78   ;X-position
     mov dh,10d    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset DS_labels[10]
     int 21h
-    
+
     mov ah,2
     mov dl,78   ;X-position
     mov dh,12d    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset DS_labels[12]
     int 21h
@@ -1582,7 +1582,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,78   ;X-position
     mov dh,13d    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset DS_labels[14]
     int 21h
@@ -1590,7 +1590,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,78   ;X-position
     mov dh,15d    ;Y-position
-    int 10h  
+    int 10h
     mov ah,9
     mov dx,offset DS_labels[16]
     int 21h
