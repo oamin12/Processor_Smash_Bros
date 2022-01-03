@@ -29,7 +29,7 @@ IncrementPoints MACRO pnum,value ;;player number, value to increment p1 or p2
     add cx,value
     mov ax,cx
 
-    Convrt_Hex_String
+    call Convrt_Hex_String
 
     mov cx,2
     mov si,offset num_placeholder+2
@@ -47,7 +47,7 @@ IncrementPoints MACRO pnum,value ;;player number, value to increment p1 or p2
     add cx,value
     mov ax,cx
 
-    Convrt_Hex_String
+    call Convrt_Hex_String
 
     mov cx,2
     mov si,offset num_placeholder+2
@@ -70,7 +70,7 @@ DecrementPoints MACRO pnum,value
     sub cx,value
     mov ax,cx
 
-    Convrt_Hex_String
+    call Convrt_Hex_String
 
     mov cx,2
     mov si,offset num_placeholder+2
@@ -88,7 +88,7 @@ DecrementPoints MACRO pnum,value
     sub cx,value
     mov ax,cx
 
-    Convrt_Hex_String
+    call Convrt_Hex_String
 
     mov cx,2
     mov si,offset num_placeholder+2

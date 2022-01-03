@@ -12,10 +12,10 @@ include Valid.inc
 include Ops.inc
 include Pts.inc
 include Print.inc
-
+;include Pwrups.inc
 .model small
-.386
 .stack 64
+.386
 .data
 
 ;---------------MAIN MENU DATA---------------------------------------------
@@ -54,7 +54,7 @@ cmndStringLength            dw 0
 
 xr dw ?
 yr dw ?
-
+ 
 x db ?
 y db ?
 ;;circle related variables
@@ -140,7 +140,7 @@ P2_ds   db "00$","00$","00$","00$","00$","00$","00$","00$","00$"
 DS_labels db "0$","1$","2$","3$","4$","5$","6$","7$","8$"
 db "$$$"
 trycatch db "0000$"
-
+ 
 ;command buttons lables------------------
 Ladd  db "ADD$"
 Ladc  db "ADC$"
@@ -170,11 +170,35 @@ ReadUserSTR_frbdn_Size     dw ?
 ReadUserSTR_type           db ?
 ReadUserSTR_syntaxErroFlag db 0  ;0 for no error, 1 for error, RESET FOR USER AFTER HIS TURN HAS ENDED
 Valid_input                db '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
+
+;power ups---------------------
+flagpower1_own             db 0
+flagpower2_ownandopponent  db 0
+
+flagpower3_changefbdn_p1   db 0 ;can only be used once by a player
+flagpower3_changefbdn_p2   db 0 ;can only be used once by a player
+
+flagpower4_stuckbit        db 0 ;value to be used is in CX
+power4_stuckbitvalue       dw ?
+power4_stuckbitindex       dw ?
+
+flagpower5_regclr_p1       db 0
+flagpower5_regclr_p2       db 0
+
+powerup_error              db 0
+
+;-----------------------------------------
+
 ;temps
 get_datasegment_address   dw ?
 get_datasegment_mode      db ?
 temp1                     db ? ; used in get value from data segment
+player_points             dw ? ;used in power ups
+temp_reg_num              db ? ;used in power ups
 tempFrbd                  dw ?
+p_num                     db ?
+reg_num                   db ?
+address                   db ?
 .code
 
 Main proc far
@@ -293,17 +317,10 @@ PlayGame proc near
     DrawDS
     UpdatePoints
 
-
-    mov x1,120
-    mov y1,180
-    ;Gun x1, y1
-    mov x1,440
-    mov y1,180
-   ; Gun2 x1, y1
     call Gun
 
     Start_Again:
-
+    ;Pwrups Player_turn
     Drawgrd
     call P1regs
     call P2regs
@@ -342,7 +359,7 @@ PlayGame proc near
     chng_turn2:
     mov Player_turn,2
     jmp Start_Again
-
+    
 
     hlt
     ret
@@ -381,12 +398,12 @@ CreateMainMenu ENDP
 AssignSmallestPts PROC NEAR
 
 cmp P1_init_points+1,2
-jnz assign_1num1
+jnz assign_1num111
 mov dl,2
 convrt_string_hex P1_init_points,dl
 jmp skip_assign1
 
-assign_1num1:
+assign_1num111:
 mov dl,3
 convrt_string_hex P1_init_points-1,dl
 skip_assign1:
@@ -432,47 +449,47 @@ AssignSmallestPts ENDP
 
 ;---------------------------------------------
 ;---------------------------------------------
-
+ 
 Getbtnclicked proc near
-
+ 
     noleftclick:
             mov ax,0003h
             int 33h ;CX(X), DX(Y)
             test bx,1
             jz noleftclick ;break if user clicked the left click
-
+ 
     mov bx,dx
     mov dx,0
     mov ax,cx
     mov cx,64 ;58 is the btn width
     div cx    ;integer division
-
+ 
     cmp bx,230
     ja under
-
+ 
     mov ax,0ffffh
     jmp exit
-
+ 
     under:
         cmp bx,265
         jb row_0
-
+ 
         cmp bx,300
         jb row_10
-
+ 
         mov ax,0ffffh
         jmp exit
-
+ 
         row_0:
             add ax,0
             jmp exit
-
+ 
         row_10:
             add ax,10d
-
-
+ 
+ 
     exit:
-
+ 
     mov btn_num,ax
     ret
 Getbtnclicked endp
@@ -687,9 +704,9 @@ Gun proc near
     mov yo,10
     mov ro,10
     ;mov clro,4h
-    DrawCir xo,yo,xc,yc,p,ro,clro
+    DrawCir xo,yo,xc,yc,p,ro,clro 
 
-    loop1G:
+    loop1G: 
     DrawTri x1,y1,4 ;;GUN POSITION
     DrawCir xo,yo,xc,yc,p,ro,00
     inc yo
@@ -713,7 +730,7 @@ Gun proc near
     mov al,0
     int 21h
     hlt    ;flushing keyboard buffer
-    jmp loop1G
+    jmp loop1G    
 
 loop2G:
 DrawTri x1,y1,0
@@ -748,13 +765,13 @@ mov ah,0ch
 hlt
 jmp loop1G
 
-loop5G:
+loop5G: 
 DrawTri x1,y1,0
 add x1,4
 DrawTri x1,y1,4
 mov ah,0ch
 mov al,0
-int 21h
+int 21h 
 
 hlt
 jmp loop1G
@@ -765,23 +782,23 @@ loop6G: ;for projectile
 mov cx,x1
 mov dx,y1
 
-mov xcm,cx
+mov xcm,cx 
 mov ycm,dx
 mov r,3
 mov clr,0Ah
 
 repeatG:
 
-DrawCir xcm,ycm,xc,yc,p,r,00
+DrawCir xcm,ycm,xc,yc,p,r,00 
 dec ycm
 
-DrawCir xcm,ycm,xc,yc,p,r,0Ah
-
-
+DrawCir xcm,ycm,xc,yc,p,r,0Ah 
+    
+    
 DrawCir xo,yo,xc,yc,p,ro,00
 inc yo
 
-DrawCir xo,yo,xc,yc,p,ro,clro
+DrawCir xo,yo,xc,yc,p,ro,clro 
 mov ax,yo
 cmp ycm,ax
 jbe cmpcolumn
@@ -789,7 +806,7 @@ cmp ycm,5 ;;check the position of the projectile "must be edited for targets" ;;
 hlt
 jnz repeatG
 
-jmp ExitG
+jmp ExitG 
 
 cmpcolumn:
 mov ax,xcm ;;projectile
@@ -930,11 +947,11 @@ mov ah,0ch
 mov al,0
 int 21h
 
-ret
+ret    
 Gun endp
 
-P1regs proc near
-
+P1regs proc near 
+    
     mov ah,2
     mov dl,1   ;X-position
     mov dh,0   ;Y-position
@@ -950,40 +967,40 @@ P1regs proc near
     mov ah,9
     mov dx,offset P2_FrbdnChar+2
     int 21h
-
+    
     mov xr,60
 
     mov yr,25  ;joe old:10
-
+  
     DrawRec xr,yr
-
+  
     add yr,28  ;joe old:40
     DrawRec xr,yr
 
     add yr,28  ;joe old:40
 
     DrawRec xr,yr
-
+    
     add yr,28  ;joe old:40
     DrawRec xr,yr
 
     mov xr,125 ;joe old:120
     mov yr,25  ;joe old:10
     DrawRec xr,yr
-
+    
     add yr,28  ;joe old:40
     DrawRec xr,yr
-
+    
     add yr,28  ;joe old:40
     DrawRec xr,yr
-
+    
     add yr,28  ;joe old:40
     DrawRec xr,yr
 
      mov ah,2
      mov dl,5   ;X-position
      mov dh,2   ;Y-position
-     int 10h
+     int 10h      
      mov ah,9
      mov dx,offset Lax
      int 21h
@@ -991,7 +1008,7 @@ P1regs proc near
     mov ah,2
     mov dl,5    ;X-position
     mov dh,4    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset Lbx
     int 21h
@@ -999,7 +1016,7 @@ P1regs proc near
     mov ah,2
     mov dl,5    ;X-position
     mov dh,6    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset Lcx
     int 21h
@@ -1008,7 +1025,7 @@ P1regs proc near
     mov ah,2
     mov dl,5    ;X-position
     mov dh,8    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset Ldx
     int 21h
@@ -1016,7 +1033,7 @@ P1regs proc near
     mov ah,2
     mov dl,24   ;X-position
     mov dh,2    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset Lsi
     int 21h
@@ -1024,15 +1041,15 @@ P1regs proc near
     mov ah,2
     mov dl,24   ;X-position
     mov dh,4    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset Ldi
     int 21h
-
+    
     mov ah,2
     mov dl,24   ;X-position
     mov dh,6    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset Lsp
     int 21h
@@ -1040,7 +1057,7 @@ P1regs proc near
     mov ah,2
     mov dl,24   ;X-position
     mov dh,8    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset Lbp
     int 21h
@@ -1049,7 +1066,7 @@ P1regs proc near
     mov ah,2
     mov dl,9   ;X-position
     mov dh,2   ;Y-position
-    int 10h
+    int 10h      
     mov ah,9
     mov dx,offset P1_regs[0]
     int 21h
@@ -1057,7 +1074,7 @@ P1regs proc near
     mov ah,2
     mov dl,9    ;X-position
     mov dh,4    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P1_regs[5]
     int 21h
@@ -1065,7 +1082,7 @@ P1regs proc near
     mov ah,2
     mov dl,9    ;X-position
     mov dh,6    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P1_regs[10]
     int 21h
@@ -1074,7 +1091,7 @@ P1regs proc near
     mov ah,2
     mov dl,9    ;X-position
     mov dh,8    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P1_regs[15]
     int 21h
@@ -1082,7 +1099,7 @@ P1regs proc near
     mov ah,2
     mov dl,17   ;X-position
     mov dh,2    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P1_regs[20]
     int 21h
@@ -1090,15 +1107,15 @@ P1regs proc near
     mov ah,2
     mov dl,17   ;X-position
     mov dh,4    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P1_regs[25]
     int 21h
-
+    
     mov ah,2
     mov dl,17   ;X-position
     mov dh,6    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P1_regs[30]
     int 21h
@@ -1106,7 +1123,7 @@ P1regs proc near
     mov ah,2
     mov dl,17   ;X-position
     mov dh,8    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P1_regs[35]
     int 21h
@@ -1114,7 +1131,7 @@ ret
 P1regs endp
 
 P2regs proc near
-
+    
     mov ah,2
     mov dl,42   ;X-position
     mov dh,0   ;Y-position
@@ -1133,12 +1150,12 @@ P2regs proc near
 
     mov xr,380
     mov yr,25  ;joe old:10
-
+    
     DrawRec xr,yr
-
+    
     add yr,28  ;joe old:40
     DrawRec xr,yr
-
+    
     add yr,28  ;joe old:40
     DrawRec xr,yr
     add yr,28  ;joe old:40
@@ -1157,7 +1174,7 @@ P2regs proc near
     mov ah,2
     mov dl,44   ;X-position
     mov dh,2    ;Y-position
-    int 10h
+    int 10h      
     mov ah,9
     mov dx,offset Lax
     int 21h
@@ -1165,7 +1182,7 @@ P2regs proc near
     mov ah,2
     mov dl,44   ;X-position
     mov dh,4    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset Lbx
     int 21h
@@ -1173,7 +1190,7 @@ P2regs proc near
     mov ah,2
     mov dl,44   ;X-position
     mov dh,6    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset Lcx
     int 21h
@@ -1182,7 +1199,7 @@ P2regs proc near
     mov ah,2
     mov dl,44   ;X-position
     mov dh,8    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset Ldx
     int 21h
@@ -1190,7 +1207,7 @@ P2regs proc near
     mov ah,2
     mov dl,64   ;X-position
     mov dh,2    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset Lsi
     int 21h
@@ -1198,15 +1215,15 @@ P2regs proc near
     mov ah,2
     mov dl,64   ;X-position
     mov dh,4    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset Ldi
     int 21h
-
+    
     mov ah,2
     mov dl,64   ;X-position
     mov dh,6    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset Lsp
     int 21h
@@ -1214,7 +1231,7 @@ P2regs proc near
     mov ah,2
     mov dl,64   ;X-position
     mov dh,8    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset Lbp
     int 21h
@@ -1224,7 +1241,7 @@ P2regs proc near
     mov ah,2
     mov dl,49   ;X-position
     mov dh,2    ;Y-position
-    int 10h
+    int 10h      
     mov ah,9
     mov dx,offset P2_regs[0]
     int 21h
@@ -1232,7 +1249,7 @@ P2regs proc near
     mov ah,2
     mov dl,49   ;X-position
     mov dh,4    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P2_regs[5]
     int 21h
@@ -1240,7 +1257,7 @@ P2regs proc near
     mov ah,2
     mov dl,49   ;X-position
     mov dh,6    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P2_regs[10]
     int 21h
@@ -1249,7 +1266,7 @@ P2regs proc near
     mov ah,2
     mov dl,49   ;X-position
     mov dh,8    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P2_regs[15]
     int 21h
@@ -1257,7 +1274,7 @@ P2regs proc near
     mov ah,2
     mov dl,57   ;X-position
     mov dh,2    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P2_regs[20]
     int 21h
@@ -1265,15 +1282,15 @@ P2regs proc near
     mov ah,2
     mov dl,57   ;X-position
     mov dh,4    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P2_regs[25]
     int 21h
-
+    
     mov ah,2
     mov dl,57   ;X-position
     mov dh,6    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P2_regs[30]
     int 21h
@@ -1281,7 +1298,7 @@ P2regs proc near
     mov ah,2
     mov dl,57   ;X-position
     mov dh,8    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P2_regs[35]
     int 21h
@@ -1289,12 +1306,12 @@ ret
 P2regs endp
 
 Update_P1ds proc near
-
+    
     ;Data Segment values-----------------
     mov ah,2
     mov dl,34   ;X-position
     mov dh,0   ;Y-position
-    int 10h
+    int 10h      
     mov ah,9
     mov dx,offset P1_ds[0]
     int 21h
@@ -1302,7 +1319,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,34   ;X-position
     mov dh,2   ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P1_ds[3]
     int 21h
@@ -1310,7 +1327,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,34    ;X-position
     mov dh,4    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P1_ds[6]
     int 21h
@@ -1319,7 +1336,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,34    ;X-position
     mov dh,6    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P1_ds[9]
     int 21h
@@ -1327,7 +1344,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,34   ;X-position
     mov dh,8d    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P1_ds[12]
     int 21h
@@ -1335,15 +1352,15 @@ Update_P1ds proc near
     mov ah,2
     mov dl,34   ;X-position
     mov dh,10d    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P1_ds[15]
     int 21h
-
+    
     mov ah,2
     mov dl,34   ;X-position
     mov dh,12d    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P1_ds[18]
     int 21h
@@ -1351,7 +1368,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,34   ;X-position
     mov dh,13d    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P1_ds[21]
     int 21h
@@ -1359,7 +1376,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,34   ;X-position
     mov dh,15d    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P1_ds[24]
     int 21h
@@ -1370,7 +1387,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,38   ;X-position
     mov dh,0   ;Y-position
-    int 10h
+    int 10h      
     mov ah,9
     mov dx,offset DS_labels[0]
     int 21h
@@ -1378,7 +1395,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,38   ;X-position
     mov dh,2   ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset DS_labels[2]
     int 21h
@@ -1386,7 +1403,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,38    ;X-position
     mov dh,4    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset DS_labels[4]
     int 21h
@@ -1395,7 +1412,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,38    ;X-position
     mov dh,6    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset DS_labels[6]
     int 21h
@@ -1403,7 +1420,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,38   ;X-position
     mov dh,8d    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset DS_labels[8]
     int 21h
@@ -1411,15 +1428,15 @@ Update_P1ds proc near
     mov ah,2
     mov dl,38   ;X-position
     mov dh,10d    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset DS_labels[10]
     int 21h
-
+    
     mov ah,2
     mov dl,38   ;X-position
     mov dh,12d    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset DS_labels[12]
     int 21h
@@ -1427,7 +1444,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,38   ;X-position
     mov dh,13d    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset DS_labels[14]
     int 21h
@@ -1435,7 +1452,7 @@ Update_P1ds proc near
     mov ah,2
     mov dl,38   ;X-position
     mov dh,15d    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset DS_labels[16]
     int 21h
@@ -1444,12 +1461,12 @@ ret
 Update_P1ds endp
 
 Update_P2ds proc near
-
+    
     ;Data Segment values-----------------
     mov ah,2
     mov dl,74   ;X-position
     mov dh,0   ;Y-position
-    int 10h
+    int 10h      
     mov ah,9
     mov dx,offset P2_ds[0]
     int 21h
@@ -1457,7 +1474,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,74   ;X-position
     mov dh,2   ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P2_ds[3]
     int 21h
@@ -1465,7 +1482,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,74    ;X-position
     mov dh,4    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P2_ds[6]
     int 21h
@@ -1474,7 +1491,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,74    ;X-position
     mov dh,6    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P2_ds[9]
     int 21h
@@ -1482,7 +1499,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,74   ;X-position
     mov dh,8d    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P2_ds[12]
     int 21h
@@ -1490,15 +1507,15 @@ Update_P2ds proc near
     mov ah,2
     mov dl,74   ;X-position
     mov dh,10d    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P2_ds[15]
     int 21h
-
+    
     mov ah,2
     mov dl,74   ;X-position
     mov dh,12d    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P2_ds[18]
     int 21h
@@ -1506,7 +1523,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,74   ;X-position
     mov dh,13d    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P2_ds[21]
     int 21h
@@ -1514,7 +1531,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,74   ;X-position
     mov dh,15d    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset P2_ds[24]
     int 21h
@@ -1525,7 +1542,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,78   ;X-position
     mov dh,0   ;Y-position
-    int 10h
+    int 10h      
     mov ah,9
     mov dx,offset DS_labels[0]
     int 21h
@@ -1533,7 +1550,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,78   ;X-position
     mov dh,2   ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset DS_labels[2]
     int 21h
@@ -1541,7 +1558,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,78    ;X-position
     mov dh,4    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset DS_labels[4]
     int 21h
@@ -1550,7 +1567,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,78    ;X-position
     mov dh,6    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset DS_labels[6]
     int 21h
@@ -1558,7 +1575,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,78   ;X-position
     mov dh,8d    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset DS_labels[8]
     int 21h
@@ -1566,15 +1583,15 @@ Update_P2ds proc near
     mov ah,2
     mov dl,78   ;X-position
     mov dh,10d    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset DS_labels[10]
     int 21h
-
+    
     mov ah,2
     mov dl,78   ;X-position
     mov dh,12d    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset DS_labels[12]
     int 21h
@@ -1582,7 +1599,7 @@ Update_P2ds proc near
     mov ah,2
     mov dl,78   ;X-position
     mov dh,13d    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset DS_labels[14]
     int 21h
@@ -1590,12 +1607,1075 @@ Update_P2ds proc near
     mov ah,2
     mov dl,78   ;X-position
     mov dh,15d    ;Y-position
-    int 10h
+    int 10h  
     mov ah,9
     mov dx,offset DS_labels[16]
     int 21h
 
 ret
 Update_P2ds endp
+
+; Pwrups proc near
+    
+;     push di
+;     push bx
+;     mov bh,0
+;     mov bx,Player_turn
+
+;     call GetNumFromUser
+
+;     push cx ;user chosen option
+
+;     cmp Player_turn,2
+;     jz player_2
+
+;     cmp P1_init_points+1,2
+;     jnz assign_1num1
+;     mov dl,2
+;     convrt_string_hex P1_init_points,dl
+;     jmp skip_p2
+
+;     assign_1num1:
+;     mov dl,3
+;     convrt_string_hex P1_init_points-1,dl
+
+;     jmp skip_p2
+;     ;----------------------------------------
+;     player_2:
+
+;     cmp P2_init_points+1,2
+;     jnz assign_1num222
+;     mov dl,2
+;     convrt_string_hex P2_init_points,dl
+;     jmp skip_assign2
+
+;     assign_1num222:
+;     mov dl,3
+;     convrt_string_hex P2_init_points-1,dl
+
+;     skip_p2:
+;     ;-------------------------------
+
+;     mov player_points,cx
+;     pop cx
+
+;     ;!!!players points in temp2, chosen power up in cx!!!
+
+;     cmp cx,1
+;     jz powerup_1
+
+;     cmp cx,2
+;     jz powerup_2
+
+;     cmp cx,3
+;     jz powerup_3
+
+;     cmp cx,4
+;     jz powerup_4
+
+;     cmp cx,5
+;     jz powerup_5
+
+
+;     jmp exit_pwrups
+;     ;------------------------------------------
+;     powerup_1:
+
+;     cmp player_points,5
+;     jb exit_pwrups
+
+;     mov flagpower1_own,1
+
+;     mov points_inc_index,bl
+;     mov points_inc_value,5
+
+;     DecrementPoints points_inc_index,points_inc_value
+
+;     jmp exit_pwrups
+
+
+
+;     ;-----------------------
+;     powerup_2:
+
+;     cmp player_points,3
+;     jb exit_pwrups
+
+;     mov points_inc_index,bl
+;     mov points_inc_value,3
+
+;     DecrementPoints points_inc_index,points_inc_value
+
+;     mov flagpower2_ownandopponent,1
+
+;     jmp exit_pwrups
+
+;     ;-----------------------
+    
+;     powerup_3:
+    
+;     cmp player_points,8
+;     jb exit_pwrups
+
+
+;     cmp Player_turn,2
+;     jz player2_check3
+
+;     cmp flagpower3_changefbdn_p1,1
+
+   
+;     jz exit_pwrups
+
+;     ;PUT YOUR CODE HERE AMINOZ------------------------
+
+
+;     ;-------------------------------------------------
+
+;     mov points_inc_index,bl
+;     mov points_inc_value,8
+
+;     DecrementPoints points_inc_index,points_inc_value
+
+;     mov flagpower3_changefbdn_p1,1
+;     jmp exit_pwrups
+
+
+;     player2_check3:
+
+;     ;PUT YOUR CODE HERE AMINOZ------------------------
+
+
+;     ;-------------------------------------------------
+;     cmp flagpower3_changefbdn_p2,1
+
+;     mov points_inc_index,bl
+;     mov points_inc_value,8
+
+;     DecrementPoints points_inc_index,points_inc_value
+
+;     mov flagpower3_changefbdn_p2,1
+;     jz exit_pwrups
+
+
+;     ;-----------------------
+;     powerup_4: ;VALUE IS RETURNED IN CX, bit stuck type in power4_stuckbitvalue
+
+;     ;NOTE: if bit type = 0, yeb2a (cx AND value) to force the bit to be zero
+;     ;      if bit type = 1, yeb2a (cx OR value)  to force the bit to be one
+
+
+;     cmp player_points,2
+;     jb exit_pwrups
+
+;     call GetNumFromUser ;taking stuck bit value (0 or 1)
+;     mov power4_stuckbitvalue,cx
+;     call GetNumFromUser ;taking bit index (0-->15)
+;     mov power4_stuckbitindex,cx
+
+;     cmp power4_stuckbitvalue,1
+;     ja exit_pwrups
+
+;     cmp power4_stuckbitindex,15
+;     ja exit_pwrups
+
+;     mov dx,1
+;     push cx
+;     mov ch,0
+;     mov cx,power4_stuckbitindex
+;     shl dx,cl
+
+;     pop cx
+
+
+
+;     mov points_inc_index,bl
+;     mov points_inc_value,2
+
+;     DecrementPoints points_inc_index,points_inc_value
+
+
+
+;     cmp power4_stuckbitvalue,1
+;     jz exit_pwrups
+
+;     not cx
+
+;     jmp exit_pwrups
+
+    
+;     ;-------------------------------------
+
+
+;     powerup_5:
+
+;     cmp player_points,30
+;     jb exit_pwrups
+
+;     cmp Player_turn,2
+;     jz player2_check5
+
+;     cmp flagpower5_regclr_p1,1
+;     jz exit_pwrups
+
+;     push ax
+;     mov ax,0
+
+;     mov temp_reg_num,0
+;     UpdateRegValue Player_turn,temp_reg_num
+
+;     mov temp_reg_num,1
+;     UpdateRegValue Player_turn,temp_reg_num
+
+;     mov temp_reg_num,2
+;     UpdateRegValue Player_turn,temp_reg_num
+
+;     mov temp_reg_num,3
+;     UpdateRegValue Player_turn,temp_reg_num
+
+;     mov temp_reg_num,4
+;     UpdateRegValue Player_turn,temp_reg_num
+
+;     mov temp_reg_num,5
+;     UpdateRegValue Player_turn,temp_reg_num
+
+;     mov temp_reg_num,6
+;     UpdateRegValue Player_turn,temp_reg_num
+
+;     mov temp_reg_num,7
+;     UpdateRegValue Player_turn,temp_reg_num
+
+
+;     mov points_inc_index,bl
+;     mov points_inc_value,30d
+
+;     DecrementPoints points_inc_index,points_inc_value
+
+;     mov flagpower3_changefbdn_p1,1
+
+;     pop ax
+;     jmp exit_pwrups
+
+
+;     player2_check5:
+
+;     cmp flagpower5_regclr_p2,1
+;     jz exit_pwrups
+
+
+;     mov temp_reg_num,0
+;     UpdateRegValue Player_turn,temp_reg_num
+
+;     mov temp_reg_num,1
+;     UpdateRegValue Player_turn,temp_reg_num
+
+;     mov temp_reg_num,2
+;     UpdateRegValue Player_turn,temp_reg_num
+
+;     mov temp_reg_num,3
+;     UpdateRegValue Player_turn,temp_reg_num
+
+;     mov temp_reg_num,4
+;     UpdateRegValue Player_turn,temp_reg_num
+
+;     mov temp_reg_num,5
+;     UpdateRegValue Player_turn,temp_reg_num
+
+;     mov temp_reg_num,6
+;     UpdateRegValue Player_turn,temp_reg_num
+
+;     mov temp_reg_num,7
+;     UpdateRegValue Player_turn,temp_reg_num
+
+
+;     mov points_inc_index,bl
+;     mov points_inc_value,30
+    
+
+;     DecrementPoints points_inc_index,points_inc_value
+
+;     mov flagpower5_regclr_p2,1
+    
+;     pop ax
+;     jmp exit_pwrups
+
+
+
+;     exit_pwrups_error:
+;     mov powerup_error,1
+
+;     exit_pwrups:
+
+;     pop bx
+;     pop di
+; ret    
+; Pwrups endp
+
+Pwrups_resetflag proc near 
+    
+    mov flagpower1_own,0
+    mov flagpower2_ownandopponent,0
+    mov flagpower4_stuckbit,0
+ret
+Pwrups_resetflag endp
+
+Convrt_Hex_String proc near 
+;local myloop,continue_convrt,exit_convrt,letter,continue,bit_0,bit_1,bit_2,bit_3
+;output string will be in  num_placeholder variable
+mov cl,0d
+mov bx, 10h
+myloop:
+    mov dx,0
+    div bx
+    cmp dx,9h
+    ja letter
+
+    add dx,30h;if number add 30h
+    inc cl
+    jmp continue
+
+    letter:;if letter add 37h
+    add dx,37h
+    inc cl
+    jmp continue
+
+    add ax,0
+jnz myloop
+jmp exit_convrt
+
+continue:
+    cmp cl,1
+    jz bit_0
+
+    cmp cl,2
+    jz bit_1
+
+    cmp cl,3
+    jz bit_2
+
+    cmp cl,4
+    jz bit_3
+
+    jmp exit_convrt
+
+    bit_0:
+        mov num_placeholder+3,dl
+        jmp myloop 
+
+    bit_1:
+        mov num_placeholder+2,dl
+        jmp myloop 
+
+    bit_2:
+        mov num_placeholder+1,dl
+        jmp myloop 
+
+    bit_3:
+        mov num_placeholder+0,dl
+        jmp myloop
+
+
+exit_convrt:
+ret
+Convrt_Hex_String endp
+
+UpdateRegValue proc near    
+    call Convrt_Hex_String ;takes the new value from AX and converts it to string in num_placeholder variable
+    
+    mov si,offset num_placeholder
+
+    cmp p_num,2
+    jz PLAYER_2_REGS
+
+    ;PLAYER-1 REGISTERS
+    cmp reg_num,7
+    ja Reg_byte_player1
+
+    ;16-bit registers--------------------------------------------
+    mov cx,4
+    cmp reg_num,0
+    jz reg_AX_p1
+
+    cmp reg_num,1
+    jz reg_BX_p1
+
+    cmp reg_num,2
+    jz reg_CX_p1
+
+    cmp reg_num,3
+    jz reg_DX_p1
+
+    cmp reg_num,4
+    jz reg_SI_p1
+
+    cmp reg_num,5
+    jz reg_DI_p1
+
+    cmp reg_num,6
+    jz reg_SP_p1
+
+    cmp reg_num,7
+    jz reg_BP_p1
+
+    reg_AX_p1:
+    mov di,offset P1_regs
+    rep movsb   
+    jmp exit_updt
+
+    reg_BX_p1:
+    mov di,offset P1_regs+5
+    rep movsb   
+    jmp exit_updt
+
+    reg_CX_p1:
+    mov di,offset P1_regs+10
+    rep movsb   
+    jmp exit_updt
+
+    reg_DX_p1:
+    mov di,offset P1_regs+15
+    rep movsb   
+    jmp exit_updt
+
+    reg_SI_p1:
+    mov di,offset P1_regs+20
+    rep movsb   
+    jmp exit_updt
+
+    reg_DI_p1:
+    mov di,offset P1_regs+25
+    rep movsb   
+    jmp exit_updt
+
+    reg_SP_p1:
+    mov di,offset P1_regs+30
+    rep movsb   
+    jmp exit_updt
+
+    reg_BP_p1:
+    mov di,offset P1_regs+35
+    rep movsb   
+    jmp exit_updt
+
+    ;8-bit registers-----------------------------------------------
+
+    Reg_byte_player1:
+    add si,2
+
+    mov cx,2
+    cmp reg_num,8d
+    jz reg_AH_p1
+
+    cmp reg_num,9d
+    jz reg_AL_p1
+
+    cmp reg_num,10d
+    jz reg_BH_p1
+
+    cmp reg_num,11d
+    jz reg_BL_p1
+
+    cmp reg_num,12d
+    jz reg_CH_p1
+
+    cmp reg_num,13d
+    jz reg_CL_p1
+
+    cmp reg_num,14d
+    jz reg_DH_p1
+
+    cmp reg_num,15d
+    jz reg_DL_p1
+
+    reg_AH_p1:
+    mov di,offset P1_regs
+    rep movsb   
+    jmp exit_updt
+
+    reg_AL_p1:
+    mov di,offset P1_regs+2
+    rep movsb   
+    jmp exit_updt
+
+    reg_BH_p1:
+    mov di,offset P1_regs+5
+    rep movsb   
+    jmp exit_updt
+
+    reg_BL_p1:
+    mov di,offset P1_regs+7
+    rep movsb   
+    jmp exit_updt
+
+    reg_CH_p1:
+    mov di,offset P1_regs+10
+    rep movsb   
+    jmp exit_updt
+
+    reg_CL_p1:
+    mov di,offset P1_regs+12
+    rep movsb   
+    jmp exit_updt
+
+    reg_DH_p1:
+    mov di,offset P1_regs+15
+    rep movsb   
+    jmp exit_updt
+
+    reg_DL_p1:
+    mov di,offset P1_regs+17
+    rep movsb   
+    jmp exit_updt
+
+    ; ;PLAYER-2 -----------------------------------------------------
+    PLAYER_2_REGS:
+
+    cmp reg_num,7
+    ja Reg_byte_player2
+
+    ;16-bit registers--------------------------------------------
+    mov cx,4
+    cmp reg_num,0
+    jz reg_AX_p2
+
+    cmp reg_num,1
+    jz reg_BX_p2
+
+    cmp reg_num,2
+    jz reg_CX_p2
+
+    cmp reg_num,3
+    jz reg_DX_p2
+
+    cmp reg_num,4
+    jz reg_SI_p2
+
+    cmp reg_num,5
+    jz reg_DI_p2
+
+    cmp reg_num,6
+    jz reg_SP_p2
+
+    cmp reg_num,7
+    jz reg_BP_p2
+
+    reg_AX_p2:
+    mov di,offset P2_regs
+    rep movsb   
+    jmp exit_updt
+
+    reg_BX_p2:
+    mov di,offset P2_regs+5
+    rep movsb   
+    jmp exit_updt
+
+    reg_CX_p2:
+    mov di,offset P2_regs+10
+    rep movsb   
+    jmp exit_updt
+
+    reg_DX_p2:
+    mov di,offset P2_regs+15
+    rep movsb   
+    jmp exit_updt
+
+    reg_SI_p2:
+    mov di,offset P2_regs+20
+    rep movsb   
+    jmp exit_updt
+
+    reg_DI_p2:
+    mov di,offset P2_regs+25
+    rep movsb   
+    jmp exit_updt
+
+    reg_SP_p2:
+    mov di,offset P2_regs+30
+    rep movsb   
+    jmp exit_updt
+
+    reg_BP_p2:
+    mov di,offset P2_regs+35
+    rep movsb   
+    jmp exit_updt
+
+    ;8-bit registers-----------------------------------------------
+
+    Reg_byte_player2:
+    add si,2
+
+    mov cx,2
+    cmp reg_num,8d
+    jz reg_AH_p2
+
+    cmp reg_num,9d
+    jz reg_AL_P2
+
+    cmp reg_num,10d
+    jz reg_BH_p2
+
+    cmp reg_num,11d
+    jz reg_BL_p2
+
+    cmp reg_num,12d
+    jz reg_CH_p2
+
+    cmp reg_num,13d
+    jz reg_CL_p2
+
+    cmp reg_num,14d
+    jz reg_DH_p2
+
+    cmp reg_num,15d
+    jz reg_DL_p2
+
+    reg_AH_p2:
+    mov di,offset P2_regs
+    rep movsb   
+    jmp exit_updt
+
+    reg_AL_p2:
+    mov di,offset P2_regs+2
+    rep movsb   
+    jmp exit_updt
+
+    reg_BH_p2:
+    mov di,offset P2_regs+5
+    rep movsb   
+    jmp exit_updt
+
+    reg_BL_p2:
+    mov di,offset P2_regs+7
+    rep movsb   
+    jmp exit_updt
+
+    reg_CH_p2:
+    mov di,offset P2_regs+10
+    rep movsb   
+    jmp exit_updt
+
+    reg_CL_p2:
+    mov di,offset P2_regs+12
+    rep movsb   
+    jmp exit_updt
+
+    reg_DH_p2:
+    mov di,offset P2_regs+15
+    rep movsb   
+    jmp exit_updt
+
+    reg_DL_p2:
+    mov di,offset P2_regs+17
+    rep movsb   
+    jmp exit_updt
+
+    exit_updt:
+    
+
+    ResetPlaceholder
+ret
+UpdateRegValue endp
+
+UpdateDataSegmentValue  proc near
+    ;local updt_oneSegment_p1,updt_oneSegment_p2,player2_data,exit_updtdatasegment,data_0_p1,data_1_p1,data_2_p1,data_3_p1,data_4_p1,data_5_p1,data_6_p1,data_7_p1,data_8_p1,data_0_p2,data_1_p2,data_2_p2,data_3_p2,data_4_p2,data_5_p2,data_6_p2,data_7_p2,data_8_p2,data_0_p11,data_1_p11,data_2_p11,data_3_p11,data_4_p11,data_5_p11,data_6_p11,data_7_p11,data_8_p11,data_0_p22,data_1_p22,data_2_p22,data_3_p22,data_4_p22,data_5_p22,data_6_p22,data_7_p22,data_8_p22
+
+    call Convrt_Hex_String ;takes the new value from AX and converts it to string in num_placeholder variable
+    mov si,offset num_placeholder
+
+    cmp p_num,2
+    jz player2_data
+
+
+    cmp mode,2
+    jz updt_oneSegment_p1
+
+    mov cx,2
+
+    cmp address,0
+    jz data_0_p11
+
+    cmp address,1
+    jz data_1_p11
+
+    cmp address,2
+    jz data_2_p11
+
+    cmp address,3
+    jz data_3_p11
+
+    cmp address,4
+    jz data_4_p11
+
+    cmp address,5
+    jz data_5_p11
+
+    cmp address,6
+    jz data_6_p11
+
+    cmp address,7
+    jz data_7_p11
+
+    cmp address,8
+    jz data_8_p11
+
+    ;------------------------------------------
+    data_0_p11:
+    mov di,offset P1_ds[3]
+    rep movsb
+    mov cx,2
+    mov di,offset P1_ds
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_1_p11:
+    mov di,offset P1_ds[6]
+    rep movsb
+    mov cx,2
+    mov di,offset P1_ds[3]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_2_p11:
+    mov di,offset P1_ds[9]
+    rep movsb
+    mov cx,2
+    mov di,offset P1_ds[6]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_3_p11:
+    mov di,offset P1_ds[12]
+    rep movsb
+    mov cx,2
+    mov di,offset P1_ds[9]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_4_p11:
+    mov di,offset P1_ds[15]
+    rep movsb
+    mov cx,2
+    mov di,offset P1_ds[12]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_5_p11:
+    mov di,offset P1_ds[18]
+    rep movsb
+    mov cx,2
+    mov di,offset P1_ds[15]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_6_p11:
+    mov di,offset P1_ds[21]
+    rep movsb
+    mov cx,2
+    mov di,offset P1_ds[18]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_7_p11:
+    mov di,offset P1_ds[24]
+    rep movsb
+    mov cx,2
+    mov di,offset P1_ds[21]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_8_p11:
+    mov di,offset P1_ds
+    rep movsb
+    mov cx,2
+    mov di,offset P1_ds[24]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+
+
+    jmp exit_updtdatasegment
+    ;-----------------------------------
+    ;-----------------------------------
+    updt_oneSegment_p1:
+    add si,2
+    mov cx,2
+
+    cmp address,0
+    jz data_0_p1
+
+    cmp address,1
+    jz data_1_p1
+
+    cmp address,2
+    jz data_2_p1
+
+    cmp address,3
+    jz data_3_p1
+
+    cmp address,4
+    jz data_4_p1
+
+    cmp address,5
+    jz data_5_p1
+
+    cmp address,6
+    jz data_6_p1
+
+    cmp address,7
+    jz data_7_p1
+
+    cmp address,8
+    jz data_8_p1
+
+
+
+    data_0_p1:
+    mov di,offset P1_ds
+    
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_1_p1:
+    mov di,offset P1_ds[3]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_2_p1:
+    mov di,offset P1_ds[6]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_3_p1:
+    mov di,offset P1_ds[9]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_4_p1:
+    mov di,offset P1_ds[12]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_5_p1:
+    mov di,offset P1_ds[15]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_6_p1:
+    mov di,offset P1_ds[18]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_7_p1:
+    mov di,offset P1_ds[21]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_8_p1:
+    mov di,offset P1_ds[24]
+    rep movsb   
+    jmp exit_updtdatasegment
+    
+
+    ;-----------------------------------------
+    player2_data:
+
+    cmp mode,2
+    jz updt_oneSegment_p2
+
+    mov cx,2
+
+    cmp address,0
+    jz data_0_p22
+
+    cmp address,1
+    jz data_1_p22
+
+    cmp address,2
+    jz data_2_p22
+
+    cmp address,3
+    jz data_3_p22
+
+    cmp address,4
+    jz data_4_p22
+
+    cmp address,5
+    jz data_5_p22
+
+    cmp address,6
+    jz data_6_p22
+
+    cmp address,7
+    jz data_7_p22
+
+    cmp address,8
+    jz data_8_p22
+
+    ;------------------------------------------
+    data_0_p22:
+    mov di,offset P2_ds[3]
+    rep movsb
+    mov cx,2
+    mov di,offset P2_ds
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_1_p22:
+    mov di,offset P2_ds[6]
+    rep movsb
+    mov cx,2
+    mov di,offset P2_ds[3]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_2_p22:
+    mov di,offset P2_ds[9]
+    rep movsb
+    mov cx,2
+    mov di,offset P2_ds[6]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_3_p22:
+    mov di,offset P2_ds[12]
+    rep movsb
+    mov cx,2
+    mov di,offset P2_ds[9]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_4_p22:
+    mov di,offset P2_ds[15]
+    rep movsb
+    mov cx,2
+    mov di,offset P2_ds[12]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_5_p22:
+    mov di,offset P2_ds[18]
+    rep movsb
+    mov cx,2
+    mov di,offset P2_ds[15]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_6_p22:
+    mov di,offset P2_ds[21]
+    rep movsb
+    mov cx,2
+    mov di,offset P2_ds[18]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_7_p22:
+    mov di,offset P2_ds[24]
+    rep movsb
+    mov cx,2
+    mov di,offset P2_ds[21]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_8_p22:
+    mov di,offset P2_ds
+    rep movsb
+    mov cx,2
+    mov di,offset P2_ds[24]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+
+    jmp exit_updtdatasegment
+    ;------------------------------------------
+    updt_oneSegment_p2:
+    add si,2
+    mov cx,2
+
+    cmp address,0
+    jz data_0_p2
+
+    cmp address,1
+    jz data_1_p2
+
+    cmp address,2
+    jz data_2_p2
+
+    cmp address,3
+    jz data_3_p2
+
+    cmp address,4
+    jz data_4_p2
+
+    cmp address,5
+    jz data_5_p2
+
+    cmp address,6
+    jz data_6_p2
+
+    cmp address,7
+    jz data_7_p2
+
+    cmp address,8
+    jz data_8_p2
+
+
+
+    data_0_p2:
+    add si,2
+    mov di,offset P2_ds
+    
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_1_p2:
+    mov di,offset P2_ds[3]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_2_p2:
+    mov di,offset P2_ds[6]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_3_p2:
+    mov di,offset P2_ds[9]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_4_p2:
+    mov di,offset P2_ds[12]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_5_p2:
+    mov di,offset P2_ds[15]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_6_p2:
+    mov di,offset P2_ds[18]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_7_p2:
+    mov di,offset P2_ds[21]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+    data_8_p2:
+    mov di,offset P2_ds[24]
+    rep movsb   
+    jmp exit_updtdatasegment
+
+
+    ;ERROR_updtdatasegment:
+    ;mov DataSegment_error,1
+
+
+    exit_updtdatasegment:
+
+    ResetPlaceholder
+ret
+UpdateDataSegmentValue endp
+
 
 end Main
