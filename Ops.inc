@@ -1,7 +1,20 @@
 Ops MACRO btn_num
-Local firstReg,axb1,bxb1,cxb1,dxb1,sib1,dib1,spb1,bpb1,ahb1,alb1,bhb1,blb1,chb1,clb1,dhb1,dlb1,p2_AX,p2_BX,p2_CX,p2_DX,p2_SI,p2_SP,p2_DI,p2_BP,p2_AH,p2_AL,p2_BH,p2_BL,p2_CH,p2_CL,p2_DH,p2_DL,getop2,axb2,bxb2,cxb2,dxb2,sib2,dib2,spb2,bpb2,ahb2,alb2,bhb2,blb2,chb2,clb2,dhb2,dlb2,immediateaddb2,p2_AX2,p2_BX2,p2_CX2,p2_DX2,p2_SI2,p2_DI2,p2_SP2,p2_BP2,p2_AH2,p2_AL2,p2_BH2,p2_BL2,p2_CH2,p2_CL2,p2_DH2,p2_DL2,p2_imm,changein2,changein1,Addition,Exit1,skipp,chk_not_8bits,chk_not_16bits,Errors,skipE,check_halfReg,chk_not_8bits1,chk_not_16bits1,check_halfReg1,skipE1,AddwithCarry,Subtract,chk_not_8bits2,chk_not_16bits2,check_halfReg2,skipE2,SubwB,chk_not_8bits3,chk_not_16bits3,check_halfReg3,skipE3,Xoring,chk_not_8bits6,chk_not_16bits6,check_halfReg6,skipE6,Anding,chk_not_8bits7,chk_not_16bits7,check_halfReg7,skipE7,Oring,chk_not_8bits8,chk_not_16bits8,check_halfReg8,skipE8
-mov cmndStringLength,0
-   
+
+cmp flagpower1_own,1
+jz activate_pw1
+jmp skippw
+activate_pw1:
+    cmp Player_turn,2
+    je chng_turn1
+    jmp chng_turn22
+    chng_turn1:
+    mov Player_turn,1
+    jmp Skippw
+    chng_turn22:
+    mov Player_turn,2
+Skippw:
+
+mov cmndStringLength,0   
 firstReg:
 mov ah,0ch
 mov al,0
@@ -357,7 +370,6 @@ mov operand1,CX
 jmp getop2
 
 directaddb:
-
 
 
 
@@ -758,6 +770,21 @@ mov cx,ReadUserSTR_frbdn_Size
 add cmndStringLength,CX
 mov CX,tempFrbd
 mov operand2,cx
+
+; cmp Player_turn,1
+; jz chckpw4p1
+; jmp chckpw4p2
+
+; chckpw4p1:
+; cmp flagpower4_stuckbit_p2,1
+; jz chckStuckp2
+
+
+; jmp skipppw4
+
+; chckpw4p2:
+
+; skipppw4:
 ;;bxb2,cxb2.....
 
 skipp:
@@ -1649,6 +1676,21 @@ jmp changein1
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 IsForbidden:
+cmp flagpower1_own,1
+jz change_player_frbdn
+jmp Not_change_player_frbdn
+change_player_frbdn:
+cmp Player_turn,2
+jz selectfrchp22
+jmp selectfrchp11
+selectfrchp22:
+mov al,P2_FrbdnChar+2
+jmp skipselectfr
+selectfrchp11:
+mov al,P1_FrbdnChar+2
+jmp skipselectfr
+
+Not_change_player_frbdn:
 
 cmp Player_turn,1
 jz selectfrchp2
@@ -1658,6 +1700,7 @@ mov al,P2_FrbdnChar+2
 jmp skipselectfr
 selectfrchp1:
 mov al,P1_FrbdnChar+2
+
 skipselectfr:
 mov DI,offset commandString
 mov cx,cmndStringLength
@@ -1709,18 +1752,39 @@ jz RorFr
 cmp OpBtn,19
 jz RolFr
 
+
 changein2:
+cmp flagpower2_ownandopponent,1
+jz change_both
 mov bh,operand1_btn
 mov reg_num,bh
 mov p_num,2h
 call UpdateRegValue 
 jmp Exit1
 changein1:
+cmp flagpower2_ownandopponent,1
+jz change_both
 mov bh,operand1_btn
 mov reg_num,bh
 mov p_num,1h
-call UpdateRegValue 
+call UpdateRegValue
 jmp Exit1
+
+
+change_both:
+mov tempPW,ax
+mov bh,operand1_btn
+mov reg_num,bh 
+mov p_num,1h
+call UpdateRegValue
+mov ax,tempPW
+mov bh,operand1_btn
+mov reg_num,bh
+mov p_num,2h
+call UpdateRegValue
+jmp Exit1
+
+
 Errors:
 cmp Player_turn,1
 je p1mistake
@@ -1749,4 +1813,18 @@ rep movsb
 mov cmndStringLength,0
 mov frbdncharflg,0
 
+cmp flagpower1_own,1 ;;change the turn back to the 1st state
+jz activate_pw1_end
+jmp skippw_end
+activate_pw1_end:
+    cmp Player_turn,2
+    je chng_turn1_end
+    jmp chng_turn22_end
+    chng_turn1_end:
+    mov Player_turn,1
+    jmp skippw_end
+    chng_turn22_end:
+    mov Player_turn,2
+skippw_end:
+call Pwrups_resetflag
 ENDM Ops

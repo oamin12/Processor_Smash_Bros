@@ -69,7 +69,7 @@ DecrementPoints MACRO pnum,value
     convrt_string_hex P1_init_points,al
     sub cx,value
     mov ax,cx
-
+    
     call Convrt_Hex_String
 
     mov cx,2

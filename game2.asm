@@ -105,7 +105,6 @@ user1_FrbdnChar             db 10,13,'Enter Player 1 forbidden Character:',10,13
 user2_FrbdnChar             db 10,13,'Enter Player 2 forbidden Character:',10,13,'$'
 user_init_points_message    db 10,13,'Enter Initial Points:',10,13,'$'
 main_menu_continue_message  db 10,13,'Press Enter to contiune$'
-WaitingMessage              db 10,13,'Waiting For Player 2$'
 press_F1_message            db 'Press [F1] to start chatting mode $'
 press_F2_message            db 'Press [F2] to game mode $'
 press_ESC_message           db 'Press [ESC] to exit program $'
@@ -192,6 +191,7 @@ P1_regs db "0000$","0000$","0000$","0000$","0000$","0000$","0000$","0000$"
 
 ;           AX[0]   BX[5]   CX[10]  DX[15]  SI[20]  DI[25]  SP[30]  BP[35]
 P2_regs db "0000$","0000$","0000$","0000$","0000$","0000$","0000$","0000$"
+
 ;           [0]   [3]   [6]   [9]   [12]  [15]  [18]  [21]  [24]
 P1_ds   db "00$","00$","00$","00$","00$","00$","00$","00$","00$"
 
@@ -278,7 +278,6 @@ tempPW                    dw ?
 p_num                     db ?
 reg_num                   db ?
 address                   db ?
-round                     db 0
 getP2info                 db 0
 getp1info                 db 0
 ;------------------CHAT-----------------;
@@ -292,8 +291,6 @@ user2_y db 15
 inc_flag  db 0
 exit_flag db 0
 
-
-
 .code
 
 Main proc far
@@ -304,32 +301,35 @@ mov es,ax
 mov ah,0
 mov al,3h
 int 10h   ;opening text mode
-call port_initializing
-;Taking Input----------------------------------------
-ShowMessage user_name_message ;displaying user_name_message
 
-mov ah,0Ah
-mov dx,offset user_name
-int 21h   ;taking user name
-; ShowMessage user2_name_message ;displaying user_name_message
+call port_initializing
+
+;Taking Input----------------------------------------
+; ShowMessage user_name_message ;displaying user_name_message
 
 ; mov ah,0Ah
-; mov dx,offset user2_name
-; int 21h   ;taking user2 name
+; mov dx,offset user_name
+; int 21h   ;taking user name
 
-ShowMessage user_init_points_message  ;displaying user_init_points_message
-
+ShowMessage user2_name_message ;displaying user_name_message
 
 mov ah,0Ah
-mov dx,offset P1_init_points
-int 21h   ;taking user intitial points
+mov dx,offset user2_name
+int 21h   ;taking user2 name
 
 ; ShowMessage user_init_points_message  ;displaying user_init_points_message
 
 
 ; mov ah,0Ah
-; mov dx,offset P2_init_points
+; mov dx,offset P1_init_points
 ; int 21h   ;taking user intitial points
+
+ShowMessage user_init_points_message  ;displaying user_init_points_message
+
+
+mov ah,0Ah
+mov dx,offset P2_init_points
+int 21h   ;taking user intitial points
 
 gobacktoMAINscreen:
 ShowMessage main_menu_continue_message ;displaying main_menu_continue_message
@@ -376,29 +376,26 @@ RunChat:
 ; mov cx,0000
 ; mov dx,184FH
 ; int 10h  ;clearing whole screen
-;call ChooseFrbdn
-setcursor 1,20
-ShowMessage WaitingMessage
-
-waitforp22:
-cmp getp2info,1
-jz gotp2data2
+; pusha
+mov getp2info,1
 pusha
-call receivep2info
+call sendP2info
+call sendPTS
+;call sendP2frbdn
+call sendName
 popa
-jmp waitforp22
-gotp2data2:
+waitforp11:
+cmp getp1info,1
+jz gotp1data1
+pusha
+call receivep1info
+popa
+jmp waitforp11
+gotp1data1:
 pusha
 call receivePTS
-;call receivep2frbdn
+;call receivep1frbdn
 call receiveName
-mov getp1info,1
-call sendP1info
-popa
-pusha
-call sendPTS
-;call sendP1frbdn
-call sendName
 popa
 
 
@@ -413,32 +410,32 @@ mov cx,0000
 mov dx,184FH
 int 10h  ;clearing whole screen
 call ChooseFrbdn
-ShowMessage WaitingMessage
-waitforp2:
-cmp getp2info,1
-jz gotp2data
+mov getp2info,1
 pusha
-call receivep2info
-popa
-jmp waitforp2
-gotp2data:
-pusha
-call receivePTS
-call receivep2frbdn
-call receiveName
-mov getp1info,1
-call sendP1info
-popa
-pusha
+call sendP2info
 call sendPTS
-call sendP1frbdn
+call sendP2frbdn
 call sendName
 popa
-
+waitforp1:
+cmp getp1info,1
+jz gotp1data
+pusha
+call receivep1info
+popa
+jmp waitforp1
+gotp1data:
+pusha
+call receivePTS
+call receivep1frbdn
+call receiveName
+popa
 call AssignSmallestPts
+
 call PlayGame
 
 jmp gobacktoMAINscreen
+exit_main:
 
 Main endp
 
@@ -447,15 +444,16 @@ mov ah,0
 	mov al,3
 	int 10h
 
-	
 call DrawChatSpliter
 call port_initializing
 pusha
 SetCursor 0,0
-ShowMessage user_name+2
-setcursor 0,14
 ShowMessage user2_name+2
+setcursor 0,14
+ShowMessage user_name+2
 popa
+
+
 chatloop:
 
 
@@ -574,23 +572,20 @@ PlayGame proc near
     Start_Again:
 
     waityourturn:
-    cmp Player_turn,1
+    cmp Player_turn,2
     jz yourturn
     pusha
     call receiveTurn
     popa
     jmp waityourturn
     yourturn:
-    
-    cmp round,0
-    jz skipUpPTS
     call receivePTS
     call receiveReg
-    skipUpPTS:
     ;pusha
-    ;call receiveReg
-    ;popa
     ;
+    ;popa
+    ;call P2regs
+    ;call UpdateRegValue
     pusha
     CheckEndGame
     popa
@@ -613,12 +608,12 @@ PlayGame proc near
     call P1regs
     call P2regs
     DrawCommandRow
-    mov xcm,60
-    mov NumPos,7
-    DrawObj1 xcm,NumPos
-    ;mov xcm,380
-    ;mov NumPos,47
-    ;DrawObj2 xcm,NumPos
+    ; mov xcm,60
+    ; mov NumPos,7
+    ; DrawObj1 xcm,NumPos
+    mov xcm,380
+    mov NumPos,47
+    DrawObj2 xcm,NumPos
 
     mov ax,1
     int 33h
@@ -636,9 +631,9 @@ PlayGame proc near
     BtnAct
     call P1regs
     call p2regs
-    
-    
-    inc round
+
+  
+
     mov ReadUserSTR_syntaxErroFlag,0
     cmp Player_turn,2
     je chng_turn
@@ -656,7 +651,7 @@ PlayGame proc near
     jz Finish
     cmp Player_win,2
     jz  Finish
-
+    
     jmp Start_Again
     chng_turn2:
     mov Player_turn,2
@@ -671,9 +666,8 @@ PlayGame proc near
     jz Finish
     cmp Player_win,2
     jz  Finish
-    jmp Start_Again
-
     
+    jmp Start_Again
     Finish:
 
 
@@ -949,25 +943,33 @@ mov point_x,0d
 mov point_y,0d
 
 SetCursor point_x,point_y
-ShowMessage user1_FrbdnChar  ;displaying user_init_points_message
+; ShowMessage user1_FrbdnChar  ;displaying user_init_points_message
+
+
+; mov ah,0Ah
+; mov dx,offset P1_FrbdnChar
+; int 21h   ;taking user intitial points
+; cmp P1_FrbdnChar+2,61h
+; jb skipcapital1
+; sub P1_FrbdnChar+2,20h
+; skipcapital1:
+
+ShowMessage user2_FrbdnChar  ;displaying user_init_points_message
 
 
 mov ah,0Ah
-mov dx,offset P1_FrbdnChar
+mov dx,offset P2_FrbdnChar
 int 21h   ;taking user intitial points
-cmp P1_FrbdnChar+2,61h
-jb skipcapital1
-sub P1_FrbdnChar+2,20h
-skipcapital1:
-
-
+cmp P2_FrbdnChar+2,61h
+jb skipcapital2
+sub P2_FrbdnChar+2,20h
+skipcapital2:
 
 ret
 ChooseFrbdn endp
 
 Gun proc near
-pusha
-    ;local addpos,loop1,loop2,loop3,loop4,loop6,loop5,repeat,Exit,yellow,red,green,purble,skipclr,skipaddpos,cmpcolumn,cmpcolumn2,Exit1,incyellow,incred,incgreen,incpurble
+ pusha
     cmp Player_turn,2
     jz gunp2
     jmp gunp1
@@ -1181,58 +1183,108 @@ jmp repeatG
 
 Exit1G:;; add points to user IMP
 
-addptsp1:
-mov points_inc_index,1
-cmp clro,0Eh
-je incyellow
-cmp clro,04h
-je incred
-cmp clro,0Ah
-je incgreen
-cmp clro,0Dh
-je incpurble
+; cmp Player_turn,1
+; jz addptsp1
+jmp addptsp2
+; addptsp1:
+; mov points_inc_index,1
+; cmp clro,0Eh
+; je incyellow
+; cmp clro,04h
+; je incred
+; cmp clro,0Ah
+; je incgreen
+; cmp clro,0Dh
+; je incpurble
 
-incyellow:
+; incyellow:
+; mov points_inc_value,1
+; IncrementPoints points_inc_index,points_inc_value
+; mov Ah,LFallObjY1
+; add Ah,30h
+; inc AH
+; sub Ah,30h
+; mov LFallObjY1,ah
+; jmp ExitG
+; incred:
+; mov points_inc_value,2
+; IncrementPoints points_inc_index,points_inc_value
+; mov Ah,LFallObjR1
+; add Ah,30h
+; inc AH
+; sub Ah,30h
+; mov LFallObjR1,ah
+; jmp ExitG
+; incgreen:
+; mov points_inc_value,4
+; IncrementPoints points_inc_index,points_inc_value
+; mov Ah,LFallObjG1
+; add Ah,30h
+; inc AH
+; sub Ah,30h
+; mov LFallObjG1,ah
+; jmp ExitG
+; incpurble:
+; mov points_inc_value,8
+; IncrementPoints points_inc_index,points_inc_value
+; mov Ah,LFallObjP1
+; add Ah,30h
+; inc AH
+; sub Ah,30h
+; mov LFallObjP1,ah
+; jmp ExitG
+
+; jmp skippaddpts
+
+addptsp2:
+mov points_inc_index,2
+;skippaddpts:
+
+cmp clro,0Eh
+je incyellow1
+cmp clro,04h
+je incred1
+cmp clro,0Ah
+je incgreen1
+cmp clro,0Dh
+je incpurble1
+
+incyellow1:
 mov points_inc_value,1
 IncrementPoints points_inc_index,points_inc_value
-mov Ah,LFallObjY1
+mov Ah,LFallObjY2
 add Ah,30h
 inc AH
 sub Ah,30h
-mov LFallObjY1,ah
+mov LFallObjY2,ah
 jmp ExitG
-incred:
+incred1:
 mov points_inc_value,2
 IncrementPoints points_inc_index,points_inc_value
-mov Ah,LFallObjR1
+mov Ah,LFallObjR2
 add Ah,30h
 inc AH
 sub Ah,30h
-mov LFallObjR1,ah
+mov LFallObjR2,ah
 jmp ExitG
-incgreen:
+incgreen1:
 mov points_inc_value,4
 IncrementPoints points_inc_index,points_inc_value
-mov Ah,LFallObjG1
+mov Ah,LFallObjG2
 add Ah,30h
 inc AH
 sub Ah,30h
-mov LFallObjG1,ah
+mov LFallObjG2,ah
 jmp ExitG
-incpurble:
+incpurble1:
 mov points_inc_value,8
 IncrementPoints points_inc_index,points_inc_value
-mov Ah,LFallObjP1
+mov Ah,LFallObjP2
 add Ah,30h
 inc AH
 sub Ah,30h
-mov LFallObjP1,ah
+mov LFallObjP2,ah
 jmp ExitG
-
-jmp skippaddpts
-
-skippaddpts:
-
 
 ExitG:
 
@@ -1243,7 +1295,6 @@ DrawTri x1,y1,00
 mov ah,0ch
 mov al,0
 int 21h
-
 popa
 ret    
 Gun endp
@@ -3073,10 +3124,11 @@ ret
 receive endp
 
 
+
 sendReg proc near
 pusha
 ;Check that Transmitter Holding Register is Empty
-        mov cx,80
+        mov cl,80
         mov si,0
     DOIT1:
     AGAIN1:
@@ -3090,7 +3142,7 @@ pusha
   		mov al,P1_regs[si]
         out dx , al
         inc si
-        dec cx
+        dec cl
         jnz DOIT1
 popa
 ret
@@ -3108,7 +3160,7 @@ pusha
   		test al,1
   		JZ CHK1                                  ;Not Ready
  ;If Ready read the VALUE in Receive data register
-  	mov dx , 03F8H
+  	    mov dx , 03F8H
   		 in al , dx
   	 	 mov P1_regs[si],al
          inc si
@@ -3158,20 +3210,19 @@ pusha
 	mov cx,4
     mov si,0
     keeprec:
-    CHK22: 	
+    CHK22:	
         mov dx,3FDH		; Line Status Register
 	    in al,dx 
   		test al,1
   		JZ CHK22                                  ;Not Ready
  ;If Ready read the VALUE in Receive data register
-  	   mov dx , 03F8H
+  	    mov dx , 03F8H
   		 in al , dx
         mov ah,0
-  	 	mov P2_init_points[si],al
+  	 	mov P1_init_points[si],al
         inc si
         dec cx
         jnz keeprec
-        
 popa          
 ret
 receivePTS endp
@@ -3190,7 +3241,7 @@ pusha
 
 ;If empty put the VALUE in Transmit data register
   	    mov dx , 3F8H ; Transmit data register
-  		mov al,P1_init_points[si]
+  		mov al,P2_init_points[si]
         out dx , al
         inc si
         dec cx
@@ -3198,6 +3249,7 @@ pusha
 popa
 ret
 sendPTS endp
+
 
 receiveName proc near
 pusha
@@ -3214,7 +3266,7 @@ pusha
   	   mov dx , 03F8H
   		 in al , dx
         mov ah,0
-  	 	mov user2_name[si],al
+  	 	mov user_name[si],al
         inc si
         dec cx
         jnz keeprec1
@@ -3237,7 +3289,7 @@ pusha
 
 ;If empty put the VALUE in Transmit data register
   	    mov dx , 3F8H ; Transmit data register
-  		mov al,user_name[si]
+  		mov al,user2_name[si]
         out dx , al
         inc si
         dec cl
@@ -3246,7 +3298,7 @@ popa
 ret
 sendName endp
 
-sendP1info proc NEAR
+sendP2info proc NEAR
 pusha
 ;Check that Transmitter Holding Register is Empty
     AGAIN333:
@@ -3257,13 +3309,13 @@ pusha
 
 ;If empty put the VALUE in Transmit data register
   	    mov dx , 3F8H ; Transmit data register
-  		mov al,getp1info
+  		mov al,getp2info
         out dx , al
 popa
 ret
-sendP1info endp 
+sendP2info endp
 
-receivep2info proc near
+receivep1info proc near
 pusha
 ;Check that Data is Ready
 	CHK3:	
@@ -3275,15 +3327,16 @@ pusha
   	    mov dx , 03F8H
   		 in al , dx
         ;mov ah,0
-  	 	mov getP2info,al
+  	 	mov getP1info,al
 popa          
 ret
-receivep2info endp
+receivep1info endp
 
-sendP1frbdn proc NEAR
+sendP2frbdn proc NEAR
 pusha
 mov cx,4
 mov si,0
+
 ;Check that Transmitter Holding Register is Empty
     AGAIN4:
         mov dx , 3FDH		; Line Status Register
@@ -3293,21 +3346,20 @@ mov si,0
 
 ;If empty put the VALUE in Transmit data register
   	    mov dx , 3F8H ; Transmit data register
-  		mov al,P1_FrbdnChar[si]
+  		mov al,P2_FrbdnChar[si]
         out dx , al
         inc si
         dec cx
         jnz AGAIN4
 popa
 ret
-sendP1frbdn endp 
+sendP2frbdn endp
 
-receivep2frbdn proc near
+receivep1frbdn proc near
 pusha
 mov cx,4
 mov si,0
 ;Check that Data is Ready
-
 	CHK4:	
         mov dx,3FDH		; Line Status Register
 	    in al,dx 
@@ -3317,15 +3369,13 @@ mov si,0
   	    mov dx , 03F8H
   		 in al , dx
         ;mov ah,0
-  	 	mov P2_FrbdnChar[si],al
+  	 	mov P1_FrbdnChar[si],al
         inc si
         dec cx
         jnz CHK4
 popa          
 ret
-receivep2frbdn endp
-
-
+receivep1frbdn endp
 
 port_initializing proc near
 
