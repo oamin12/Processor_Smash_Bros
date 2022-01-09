@@ -65,13 +65,13 @@ include Drawgrd.inc
 include DrawTri.inc
 include DrawObj.inc
 include CMDs.inc
-include BtnAct.inc
 include Valid.inc
 include Ops.inc
 include Pts.inc
 include Print.inc
 include cmpchar.inc
 include Chckend.inc
+include BtnAct.inc
 .model small
 .stack 64
 .386
@@ -110,6 +110,10 @@ press_F1_message            db 'Press [F1] to start chatting mode $'
 press_F2_message            db 'Press [F2] to game mode $'
 press_ESC_message           db 'Press [ESC] to exit program $'
 ;----------------------------------------------------------------
+choose_Level1_message       db '[1] Beginners level$'
+choose_Level2_message       db '[2] Beast level$'
+press_level_choice          db 'Choose 1 or 2 to start an unforgettable game!$'
+
 
 commandString               db 10  dup('$')
 resetcmdStr                 db 10  dup('$')
@@ -243,9 +247,9 @@ flagpower3_changefbdn_p2   db 0 ;can only be used once by a player
 
 ;flagpower4_stuckbit        db 0 ;value to be used is in CX
 power4_stuckbitvalue       dw ?
-power4_stuckbitvalue2       dw ?
-power4_stuckbitindex        dw ?
-power4_stuckbitindex2       dw ?
+power4_stuckbitvalue2      dw ?
+power4_stuckbitindex       dw ?
+power4_stuckbitindex2      dw ?
 flagpower4_stuckbit_p1     db 0
 flagpower4_stuckbit_p2     db 0
 
@@ -292,7 +296,14 @@ user2_y db 15
 inc_flag  db 0
 exit_flag db 0
 
-
+;;;;;;;;;;;;;;;DS;;;;;
+DSAdd             db ? ; Data segment address used for setting address
+operand1_btn_DS db ?
+operand2_btn_DS db ?
+modeDS db ?
+temp_DS                   dw ?
+;;LEVEL 2::::
+Level                     db ?
 
 .code
 
@@ -370,6 +381,10 @@ jz RunChat
 cmp ah,3ch ;if the user pressed F2
 jz RunGame
 
+cmp ah,01h ;used pressed ESC
+jz endgame
+
+
 RunChat:
 ; mov ax,0600h
 ; mov bh,07
@@ -412,6 +427,22 @@ mov bh,07
 mov cx,0000
 mov dx,184FH
 int 10h  ;clearing whole screen
+Call CreateLevelChoiceMenu 
+mov ah,0
+int 16h
+
+cmp al,31H
+je Level_1
+cmp al,32H
+je Level_2
+
+Level_1:
+mov Level,1
+jmp skipplvl
+level_2:
+mov Level,2
+skipplvl:
+
 call ChooseFrbdn
 ShowMessage WaitingMessage
 waitforp2:
@@ -433,12 +464,21 @@ pusha
 call sendPTS
 call sendP1frbdn
 call sendName
+call sendLvl
 popa
 
 call AssignSmallestPts
 call PlayGame
 
 jmp gobacktoMAINscreen
+endgame:
+mov ax,0600h
+mov bh,07
+mov cx,0000
+mov dx,184FH
+int 10h  ;clearing whole screen
+mov ah,4ch ;To end/terminate the program
+int 21h
 
 Main endp
 
@@ -558,7 +598,7 @@ PlayGame proc near
     ;Drawing lines(grid)
     Drawgrd
     ;Drawing Commands buttons
-    DrawCommandRow
+    call DrawCommandRow
     ;DrawAddressingRow
 
     ;Drawing Registers
@@ -579,6 +619,8 @@ PlayGame proc near
     pusha
     call receiveTurn
     popa
+    cmp Player_turn,3
+    jz randomFlyingObj2
     jmp waityourturn
     yourturn:
     
@@ -587,10 +629,7 @@ PlayGame proc near
     call receivePTS
     call receiveReg
     skipUpPTS:
-    ;pusha
-    ;call receiveReg
-    ;popa
-    ;
+    
     pusha
     CheckEndGame
     popa
@@ -603,7 +642,37 @@ PlayGame proc near
 
     ;-------------------------------------------------------------
     
+
+
+    jmp skiprandomFlyingObj2
+    randomFlyingObj2:
+    mov Player_turn,1
     call Gun
+    mov Player_turn,2
+    jmp waityourturn
+    skiprandomFlyingObj2:
+
+
+    MOV AH, 00h  ; interrupts to get system time
+    int 1AH      ; CX:DX now hold number of clock ticks since midnight
+    mov  ax, dx
+    xor  dx, dx
+    mov  cx, 2d
+    div  cx       ;here dx contains the remainder of the division - from 0 to 3
+    cmp dx,1
+    jz randomFlyingObj
+    jmp skiprandomFlyingObj
+    randomFlyingObj:
+    mov Player_turn,3
+    call sendTurn
+    mov Player_turn,1
+    call Gun
+    mov Player_turn,1
+    skiprandomFlyingObj:
+
+
+   
+    ;call Gun
     call P1regs
     call P2regs
     UpdatePoints
@@ -612,7 +681,7 @@ PlayGame proc near
     Drawgrd
     call P1regs
     call P2regs
-    DrawCommandRow
+    call DrawCommandRow
     mov xcm,60
     mov NumPos,7
     DrawObj1 xcm,NumPos
@@ -634,6 +703,8 @@ PlayGame proc near
     RegAddMenu:
 
     BtnAct
+    call Update_P1ds
+    call Update_P2ds
     call P1regs
     call p2regs
     
@@ -1262,9 +1333,16 @@ P1regs proc near
     mov dl,1   ;X-position
     mov dh,4   ;Y-position
     int 10h
+    cmp Level,1
+    je Show_FrbdnChar
+    cmp Level,2
+    je hide_FrbdnChar
+    Show_FrbdnChar:
     mov ah,9
     mov dx,offset P2_FrbdnChar+2
     int 21h
+    hide_FrbdnChar:
+    
     
     mov xr,60
 
@@ -1442,9 +1520,15 @@ P2regs proc near
     mov dl,42   ;X-position
     mov dh,4   ;Y-position
     int 10h
+    cmp Level,1
+    je Show_FrbdnChar2
+    cmp Level,2
+    je hide_FrbdnChar2
+    Show_FrbdnChar2:
     mov ah,9
     mov dx,offset P1_FrbdnChar+2
     int 21h
+    hide_FrbdnChar2:
 
     mov xr,380
     mov yr,25  ;joe old:10
@@ -1988,8 +2072,10 @@ Pwrups proc near
     mov points_inc_index,bl
     mov points_inc_value,5
 
+    cmp level,2
+    jz skipdec
     DecrementPoints points_inc_index,points_inc_value
-
+    skipdec:
     jmp exit_pwrups
 
 
@@ -2637,44 +2723,38 @@ ret
 UpdateRegValue endp
 
 UpdateDataSegmentValue  proc near
-    
+    pusha
+    ;Player_num, Operand1_btn which represents (address 0->8), modeDS= (1->16bit, 2->update8bits)
+
     call Convrt_Hex_String ;takes the new value from AX and converts it to string in num_placeholder variable
     mov si,offset num_placeholder
 
-    cmp p_num,2
+    cmp Player_num,2
     jz player2_data
 
 
-    cmp mode,2
+    cmp modeDS,2
     jz updt_oneSegment_p1
 
     mov cx,2
 
-    cmp address,0
+    cmp operand1_btn_DS,0
     jz data_0_p11
-
-    cmp address,1
+    cmp operand1_btn_DS,1
     jz data_1_p11
-
-    cmp address,2
+    cmp operand1_btn_DS,2
     jz data_2_p11
-
-    cmp address,3
+    cmp operand1_btn_DS,3
     jz data_3_p11
-
-    cmp address,4
+    cmp operand1_btn_DS,4
     jz data_4_p11
-
-    cmp address,5
+    cmp operand1_btn_DS,5
     jz data_5_p11
-
-    cmp address,6
+    cmp operand1_btn_DS,6
     jz data_6_p11
-
-    cmp address,7
+    cmp operand1_btn_DS,7
     jz data_7_p11
-
-    cmp address,8
+    cmp operand1_btn_DS,8
     jz data_8_p11
 
     ;------------------------------------------
@@ -2685,7 +2765,6 @@ UpdateDataSegmentValue  proc near
     mov di,offset P1_ds
     rep movsb   
     jmp exit_updtdatasegment
-
     data_1_p11:
     mov di,offset P1_ds[6]
     rep movsb
@@ -2693,7 +2772,6 @@ UpdateDataSegmentValue  proc near
     mov di,offset P1_ds[3]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_2_p11:
     mov di,offset P1_ds[9]
     rep movsb
@@ -2701,7 +2779,6 @@ UpdateDataSegmentValue  proc near
     mov di,offset P1_ds[6]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_3_p11:
     mov di,offset P1_ds[12]
     rep movsb
@@ -2709,7 +2786,6 @@ UpdateDataSegmentValue  proc near
     mov di,offset P1_ds[9]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_4_p11:
     mov di,offset P1_ds[15]
     rep movsb
@@ -2717,7 +2793,6 @@ UpdateDataSegmentValue  proc near
     mov di,offset P1_ds[12]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_5_p11:
     mov di,offset P1_ds[18]
     rep movsb
@@ -2725,7 +2800,6 @@ UpdateDataSegmentValue  proc near
     mov di,offset P1_ds[15]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_6_p11:
     mov di,offset P1_ds[21]
     rep movsb
@@ -2733,7 +2807,6 @@ UpdateDataSegmentValue  proc near
     mov di,offset P1_ds[18]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_7_p11:
     mov di,offset P1_ds[24]
     rep movsb
@@ -2741,7 +2814,6 @@ UpdateDataSegmentValue  proc near
     mov di,offset P1_ds[21]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_8_p11:
     mov di,offset P1_ds
     rep movsb
@@ -2759,76 +2831,58 @@ UpdateDataSegmentValue  proc near
     add si,2
     mov cx,2
 
-    cmp address,0
+    cmp operand1_btn_DS,0
     jz data_0_p1
-
-    cmp address,1
+    cmp operand1_btn_DS,1
     jz data_1_p1
-
-    cmp address,2
+    cmp operand1_btn_DS,2
     jz data_2_p1
-
-    cmp address,3
+    cmp operand1_btn_DS,3
     jz data_3_p1
-
-    cmp address,4
+    cmp operand1_btn_DS,4
     jz data_4_p1
-
-    cmp address,5
+    cmp operand1_btn_DS,5
     jz data_5_p1
-
-    cmp address,6
+    cmp operand1_btn_DS,6
     jz data_6_p1
-
-    cmp address,7
+    cmp operand1_btn_DS,7
     jz data_7_p1
-
-    cmp address,8
+    cmp operand1_btn_DS,8
     jz data_8_p1
-
 
 
     data_0_p1:
     mov di,offset P1_ds
-    
     rep movsb   
     jmp exit_updtdatasegment
-
     data_1_p1:
     mov di,offset P1_ds[3]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_2_p1:
     mov di,offset P1_ds[6]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_3_p1:
     mov di,offset P1_ds[9]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_4_p1:
     mov di,offset P1_ds[12]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_5_p1:
     mov di,offset P1_ds[15]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_6_p1:
     mov di,offset P1_ds[18]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_7_p1:
     mov di,offset P1_ds[21]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_8_p1:
     mov di,offset P1_ds[24]
     rep movsb   
@@ -2838,36 +2892,28 @@ UpdateDataSegmentValue  proc near
     ;-----------------------------------------
     player2_data:
 
-    cmp mode,2
+    cmp modeDS,2
     jz updt_oneSegment_p2
 
     mov cx,2
 
-    cmp address,0
+    cmp operand1_btn_DS,0
     jz data_0_p22
-
-    cmp address,1
+    cmp operand1_btn_DS,1
     jz data_1_p22
-
-    cmp address,2
+    cmp operand1_btn_DS,2
     jz data_2_p22
-
-    cmp address,3
+    cmp operand1_btn_DS,3
     jz data_3_p22
-
-    cmp address,4
+    cmp operand1_btn_DS,4
     jz data_4_p22
-
-    cmp address,5
+    cmp operand1_btn_DS,5
     jz data_5_p22
-
-    cmp address,6
+    cmp operand1_btn_DS,6
     jz data_6_p22
-
-    cmp address,7
+    cmp operand1_btn_DS,7
     jz data_7_p22
-
-    cmp address,8
+    cmp operand1_btn_DS,8
     jz data_8_p22
 
     ;------------------------------------------
@@ -2878,7 +2924,6 @@ UpdateDataSegmentValue  proc near
     mov di,offset P2_ds
     rep movsb   
     jmp exit_updtdatasegment
-
     data_1_p22:
     mov di,offset P2_ds[6]
     rep movsb
@@ -2886,7 +2931,6 @@ UpdateDataSegmentValue  proc near
     mov di,offset P2_ds[3]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_2_p22:
     mov di,offset P2_ds[9]
     rep movsb
@@ -2894,7 +2938,6 @@ UpdateDataSegmentValue  proc near
     mov di,offset P2_ds[6]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_3_p22:
     mov di,offset P2_ds[12]
     rep movsb
@@ -2902,7 +2945,6 @@ UpdateDataSegmentValue  proc near
     mov di,offset P2_ds[9]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_4_p22:
     mov di,offset P2_ds[15]
     rep movsb
@@ -2910,7 +2952,6 @@ UpdateDataSegmentValue  proc near
     mov di,offset P2_ds[12]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_5_p22:
     mov di,offset P2_ds[18]
     rep movsb
@@ -2918,7 +2959,6 @@ UpdateDataSegmentValue  proc near
     mov di,offset P2_ds[15]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_6_p22:
     mov di,offset P2_ds[21]
     rep movsb
@@ -2926,7 +2966,6 @@ UpdateDataSegmentValue  proc near
     mov di,offset P2_ds[18]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_7_p22:
     mov di,offset P2_ds[24]
     rep movsb
@@ -2934,7 +2973,6 @@ UpdateDataSegmentValue  proc near
     mov di,offset P2_ds[21]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_8_p22:
     mov di,offset P2_ds
     rep movsb
@@ -2950,92 +2988,850 @@ UpdateDataSegmentValue  proc near
     add si,2
     mov cx,2
 
-    cmp address,0
+    cmp operand1_btn_DS,0
     jz data_0_p2
-
-    cmp address,1
+    cmp operand1_btn_DS,1
     jz data_1_p2
-
-    cmp address,2
+    cmp operand1_btn_DS,2
     jz data_2_p2
-
-    cmp address,3
+    cmp operand1_btn_DS,3
     jz data_3_p2
-
-    cmp address,4
+    cmp operand1_btn_DS,4
     jz data_4_p2
-
-    cmp address,5
+    cmp operand1_btn_DS,5
     jz data_5_p2
-
-    cmp address,6
+    cmp operand1_btn_DS,6
     jz data_6_p2
-
-    cmp address,7
+    cmp operand1_btn_DS,7
     jz data_7_p2
-
-    cmp address,8
+    cmp operand1_btn_DS,8
     jz data_8_p2
-
-
 
     data_0_p2:
     add si,2
     mov di,offset P2_ds
-    
     rep movsb   
     jmp exit_updtdatasegment
-
     data_1_p2:
     mov di,offset P2_ds[3]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_2_p2:
     mov di,offset P2_ds[6]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_3_p2:
     mov di,offset P2_ds[9]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_4_p2:
     mov di,offset P2_ds[12]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_5_p2:
     mov di,offset P2_ds[15]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_6_p2:
     mov di,offset P2_ds[18]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_7_p2:
     mov di,offset P2_ds[21]
     rep movsb   
     jmp exit_updtdatasegment
-
     data_8_p2:
     mov di,offset P2_ds[24]
     rep movsb   
     jmp exit_updtdatasegment
 
-
     ;ERROR_updtdatasegment:
     ;mov DataSegment_error,1
 
-
     exit_updtdatasegment:
-
     ResetPlaceholder
+    popa
 ret
 UpdateDataSegmentValue endp
+
+GetbtnclickedDS proc near
+    noleftclick1:
+            mov ax,0003h
+            int 33h ;CX(X), DX(Y)
+            test bx,1
+            jz noleftclick1 ;break if user clicked the left click
+ 
+    mov bx,dx
+    mov dx,0
+    mov ax,cx
+    mov cx,71 ;65 is the btn width
+    div cx    ;integer division
+ 
+    cmp bx,247
+    ja under1
+    mov ax,0ffffh
+    jmp exit1
+ 
+    under1:
+        cmp bx,276
+        jb row_01
+        mov ax,0ffffh
+        jmp exit1
+        row_01:
+        add ax,0
+        jmp exit1
+ 
+    exit1:
+    mov btn_num,ax
+    ret
+GetbtnclickedDS endp
+
+DrawDSAddress proc NEAR
+;clearing buttons area
+    mov ax,0600h
+    mov bh,0
+    mov cl,0  ;x1
+    mov ch,17 ;y1
+    mov dl,80 ;x2
+    mov dh,20 ;y2
+    int 10h
+
+    mov xr,3d
+    mov yr,247
+    DrawDSbtn xr,yr
+
+    mov xr,74d
+    mov yr,247
+    DrawDSbtn xr,yr
+
+    mov xr,145d
+    mov yr,247
+    DrawDSbtn xr,yr
+
+    mov xr,216d
+    mov yr,247
+    DrawDSbtn xr,yr
+
+    mov xr,287d
+    mov yr,247
+    DrawDSbtn xr,yr
+
+    mov xr,358d
+    mov yr,247
+    DrawDSbtn xr,yr
+
+    mov xr,429d
+    mov yr,247
+    DrawDSbtn xr,yr
+
+    mov xr,500d
+    mov yr,247
+    DrawDSbtn xr,yr
+
+    mov xr,571d
+    mov yr,247
+    DrawDSbtn xr,yr
+
+;Labels
+    mov ah,2
+    mov dl,4
+    mov dh,18
+    int 10h  
+    mov ah,9
+    mov dx,offset DS_labels
+    int 21h
+
+    mov ah,2
+    mov dl,13
+    mov dh,18
+    int 10h  
+    mov ah,9
+    mov dx,offset DS_labels+2
+    int 21h
+
+    mov ah,2
+    mov dl,22
+    mov dh,18
+    int 10h  
+    mov ah,9
+    mov dx,offset DS_labels+4
+    int 21h
+    
+    mov ah,2
+    mov dl,31
+    mov dh,18
+    int 10h  
+    mov ah,9
+    mov dx,offset DS_labels+6
+    int 21h
+
+    mov ah,2
+    mov dl,40
+    mov dh,18
+    int 10h  
+    mov ah,9
+    mov dx,offset DS_labels+8
+    int 21h
+
+    mov ah,2
+    mov dl,48
+    mov dh,18
+    int 10h  
+    mov ah,9
+    mov dx,offset DS_labels+10
+    int 21h
+
+    mov ah,2
+    mov dl,57
+    mov dh,18
+    int 10h  
+    mov ah,9
+    mov dx,offset DS_labels+12
+    int 21h
+
+    mov ah,2
+    mov dl,66
+    mov dh,18
+    int 10h  
+    mov ah,9
+    mov dx,offset DS_labels+14
+    int 21h
+
+    mov ah,2
+    mov dl,75
+    mov dh,18
+    int 10h  
+    mov ah,9
+    mov dx,offset DS_labels+16
+    int 21h
+    ret
+
+DrawDSAddress Endp
+
+DrawCommandRow proc near  ;x y top left corner of the drawn rectangle
+
+    ;clearing buttons area
+    mov ax,0600h
+    mov bh,0
+    mov cl,0  ;x1
+    mov ch,17 ;y1
+    mov dl,80 ;x2
+    mov dh,20 ;y2
+    int 10h
+
+    mov xr,5d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,69d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,133d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,197d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,261d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,325d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,389d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,453d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,517d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,581d
+    mov yr,235
+    Drawbtncommand xr,yr
+;-------------------------------------------------------------
+
+   mov xr,5d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,69d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,133d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,197d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,261d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,325d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,389d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,453d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,517d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,581d
+    mov yr,265
+    Drawbtncommand xr,yr
+    ;--------------------------------------
+    ;Labels
+    mov ah,2
+    mov dl,3
+    mov dh,17
+    int 10h  
+    mov ah,9
+    mov dx,offset Ladd
+    int 21h
+
+    mov ah,2
+    mov dl,11
+    mov dh,17
+    int 10h  
+    mov ah,9
+    mov dx,offset Ladc
+    int 21h
+
+    mov ah,2
+    mov dl,19
+    mov dh,17
+    int 10h  
+    mov ah,9
+    mov dx,offset Lsub
+    int 21h
+    
+    mov ah,2
+    mov dl,27
+    mov dh,17
+    int 10h  
+    mov ah,9
+    mov dx,offset Lsbb
+    int 21h
+
+    mov ah,2
+    mov dl,35
+    mov dh,17
+    int 10h  
+    mov ah,9
+    mov dx,offset Ldiv
+    int 21h
+
+    mov ah,2
+    mov dl,43
+    mov dh,17
+    int 10h  
+    mov ah,9
+    mov dx,offset Lmul
+    int 21h
+
+    mov ah,2
+    mov dl,51
+    mov dh,17
+    int 10h  
+    mov ah,9
+    mov dx,offset Lxor
+    int 21h
+
+    mov ah,2
+    mov dl,59
+    mov dh,17
+    int 10h  
+    mov ah,9
+    mov dx,offset Land
+    int 21h
+
+    mov ah,2
+    mov dl,67
+    mov dh,17
+    int 10h  
+    mov ah,9
+    mov dx,offset Lor
+    int 21h
+
+    mov ah,2
+    mov dl,75
+    mov dh,17
+    int 10h  
+    mov ah,9
+    mov dx,offset Lnop
+    int 21h
+    ;--------------new_row---------------
+    mov ah,2
+    mov dl,3
+    mov dh,19
+    int 10h  
+    mov ah,9
+    mov dx,offset Lshr
+    int 21h
+
+    mov ah,2
+    mov dl,11
+    mov dh,19
+    int 10h  
+    mov ah,9
+    mov dx,offset Lshl
+    int 21h
+
+    mov ah,2
+    mov dl,19
+    mov dh,19
+    int 10h  
+    mov ah,9
+    mov dx,offset Lmov
+    int 21h
+
+    mov ah,2
+    mov dl,27
+    mov dh,19
+    int 10h  
+    mov ah,9
+    mov dx,offset Linc
+    int 21h
+
+    mov ah,2
+    mov dl,35
+    mov dh,19
+    int 10h  
+    mov ah,9
+    mov dx,offset Ldec
+    int 21h
+
+    mov ah,2
+    mov dl,43
+    mov dh,19
+    int 10h  
+    mov ah,9
+    mov dx,offset Lclc
+    int 21h
+
+    mov ah,2
+    mov dl,51
+    mov dh,19
+    int 10h  
+    mov ah,9
+    mov dx,offset Lidiv
+    int 21h
+
+    mov ah,2
+    mov dl,59
+    mov dh,19
+    int 10h  
+    mov ah,9
+    mov dx,offset Limul
+    int 21h
+
+    mov ah,2
+    mov dl,67
+    mov dh,19
+    int 10h  
+    mov ah,9
+    mov dx,offset Lror
+    int 21h
+
+    mov ah,2
+    mov dl,75
+    mov dh,19
+    int 10h  
+    mov ah,9
+    mov dx,offset Lrol
+    int 21h
+    ret
+DrawCommandRow Endp
+
+DrawAddressingRow proc near
+    ;clearing buttons area
+    mov ax,0600h
+    mov bh,0
+    mov cl,0  ;x1
+    mov ch,17 ;y1
+    mov dl,80 ;x2
+    mov dh,20 ;y2
+    int 10h
+
+    mov xr,5d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,69d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,133d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,197d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,261d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,325d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,389d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,453d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,517d
+    mov yr,235
+    Drawbtncommand xr,yr
+
+    mov xr,581d
+    mov yr,235
+    Drawbtncommand xr,yr
+;-------------------------------------------------------------
+
+   mov xr,5d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,69d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,133d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,197d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,261d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,325d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,389d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,453d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,517d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+    mov xr,581d
+    mov yr,265
+    Drawbtncommand xr,yr
+
+
+
+  ;Labels
+    mov ah,2
+    mov dl,3
+    mov dh,17
+    int 10h  
+    mov ah,9
+    mov dx,offset Lax
+    int 21h
+
+    mov ah,2
+    mov dl,11
+    mov dh,17
+    int 10h  
+    mov ah,9
+    mov dx,offset Lbx
+    int 21h
+
+    mov ah,2
+    mov dl,19
+    mov dh,17
+    int 10h  
+    mov ah,9
+    mov dx,offset Lcx
+    int 21h
+    
+    mov ah,2
+    mov dl,27
+    mov dh,17
+    int 10h  
+    mov ah,9
+    mov dx,offset Ldx
+    int 21h
+
+    mov ah,2
+    mov dl,35
+    mov dh,17
+    int 10h  
+    mov ah,9
+    mov dx,offset Lsi
+    int 21h
+
+    mov ah,2
+    mov dl,43
+    mov dh,17
+    int 10h  
+    mov ah,9
+    mov dx,offset Ldi
+    int 21h
+
+    mov ah,2
+    mov dl,51
+    mov dh,17
+    int 10h  
+    mov ah,9
+    mov dx,offset Lsp
+    int 21h
+
+    mov ah,2
+    mov dl,59
+    mov dh,17
+    int 10h  
+    mov ah,9
+    mov dx,offset Lbp
+    int 21h
+
+    mov ah,2
+    mov dl,67
+    mov dh,17
+    int 10h  
+    mov ah,9
+    mov dx,offset Lah
+    int 21h
+
+    mov ah,2
+    mov dl,75
+    mov dh,17
+    int 10h  
+    mov ah,9
+    mov dx,offset Lal
+    int 21h
+
+    ;--------------new_row---------------
+
+    mov ah,2
+    mov dl,3
+    mov dh,19
+    int 10h  
+    mov ah,9
+    mov dx,offset Lbh
+    int 21h
+
+    mov ah,2
+    mov dl,11
+    mov dh,19
+    int 10h  
+    mov ah,9
+    mov dx,offset Lbl
+    int 21h
+
+    mov ah,2
+    mov dl,19
+    mov dh,19
+    int 10h  
+    mov ah,9
+    mov dx,offset Lch
+    int 21h
+
+    mov ah,2
+    mov dl,27
+    mov dh,19
+    int 10h  
+    mov ah,9
+    mov dx,offset Lcl
+    int 21h
+
+    mov ah,2
+    mov dl,35
+    mov dh,19
+    int 10h  
+    mov ah,9
+    mov dx,offset Ldh
+    int 21h
+
+    mov ah,2
+    mov dl,43
+    mov dh,19
+    int 10h  
+    mov ah,9
+    mov dx,offset Ldl
+    int 21h
+
+    mov ah,2
+    mov dl,50
+    mov dh,19
+    int 10h  
+    mov ah,9
+    mov dx,offset Limd_adr
+    int 21h
+
+    mov ah,2
+    mov dl,59
+    mov dh,19
+    int 10h  
+    mov ah,9
+    mov dx,offset Ldir_adr
+    int 21h
+
+    mov ah,2
+    mov dl,66
+    mov dh,19
+    int 10h  
+    mov ah,9
+    mov dx,offset Lind_adr
+    int 21h
+
+    mov ah,2
+    mov dl,73
+    mov dh,19
+    int 10h  
+    mov ah,9
+    mov dx,offset Lbas_adr
+    int 21h
+    ret
+DrawAddressingRow Endp
+GetDataSegmentValue proc near
+    ;little indian lw 3ayez 1 dakhalo 0 w khod ch
+    ;convrt_string_hex MACRO STR,mode 
+    ;This macro always returns 2 data slots in CH:CL respectively
+    ;e.g: address =1 , therefore CX= addr[2]:addr[1] both of them, if u need the exact address u sent (8bits slot) use CH
+    ;NOTE: address values: 0, 2, 4, 6, 8
+    cmp Player_num,2
+    jz player2
+
+    mov get_datasegment_mode,2
+
+    cmp DSAdd,0
+    jz data_01_p1
+    cmp DSAdd,2
+    jz data_23_p1
+    cmp DSAdd,4
+    jz data_45_p1
+    cmp DSAdd,6
+    jz data_67_p1
+    cmp DSAdd,8
+    jz data_80_p1
+    
+    data_01_p1:
+    convrt_string_hex P1_ds-2,get_datasegment_mode
+    mov temp1,cl
+    convrt_string_hex P1_ds+1,get_datasegment_mode
+    mov ch,temp1
+    xchg ch,cl
+    jmp exit_getdatasegmentvalue
+    data_23_p1:
+    convrt_string_hex P1_ds+4,get_datasegment_mode
+    xchg ch,cl
+    convrt_string_hex P1_ds+7,get_datasegment_mode
+    jmp exit_getdatasegmentvalue
+    data_45_p1:
+    convrt_string_hex P1_ds+10,get_datasegment_mode
+    xchg ch,cl
+    convrt_string_hex P1_ds+13,get_datasegment_mode
+    jmp exit_getdatasegmentvalue
+    data_67_p1:
+    convrt_string_hex P1_ds+16,get_datasegment_mode
+    xchg ch,cl
+    convrt_string_hex P1_ds+19,get_datasegment_mode
+    jmp exit_getdatasegmentvalue
+    data_80_p1:
+    convrt_string_hex P1_ds+22,get_datasegment_mode
+    xchg ch,cl
+    convrt_string_hex P1_ds-2,get_datasegment_mode
+    jmp exit_getdatasegmentvalue
+    ;-----------------------------------
+    player2:
+    cmp DSAdd,0
+    jz data_01_p2
+    cmp DSAdd,2
+    jz data_23_p2
+    cmp DSAdd,4
+    jz data_45_p2
+    cmp DSAdd,6
+    jz data_67_p2
+    cmp DSAdd,8
+    jz data_80_p2
+    
+    data_01_p2:
+    convrt_string_hex P2_ds-2,get_datasegment_mode
+    mov temp1,cl
+    convrt_string_hex P2_ds+1,get_datasegment_mode
+    mov ch,temp1
+    xchg ch,cl
+    jmp exit_getdatasegmentvalue
+    data_23_p2:
+    convrt_string_hex P2_ds+4,get_datasegment_mode
+    xchg ch,cl
+    convrt_string_hex P2_ds+7,get_datasegment_mode
+    jmp exit_getdatasegmentvalue
+    data_45_p2:
+    convrt_string_hex P2_ds+10,get_datasegment_mode
+    xchg ch,cl
+    convrt_string_hex P2_ds+13,get_datasegment_mode
+    jmp exit_getdatasegmentvalue
+    data_67_p2:
+    convrt_string_hex P2_ds+16,get_datasegment_mode
+    xchg ch,cl
+    convrt_string_hex P2_ds+19,get_datasegment_mode
+    jmp exit_getdatasegmentvalue
+    data_80_p2:
+    convrt_string_hex P2_ds+22,get_datasegment_mode
+    xchg ch,cl
+    convrt_string_hex P2_ds-2,get_datasegment_mode
+    jmp exit_getdatasegmentvalue
+
+    exit_getdatasegmentvalue:
+    ret
+GetDataSegmentValue Endp
+
+; BtnAct proc near 
+;    ; local exit
+; ; mov OpBtn,ax
+; cmp OpBtn,9
+; je exit007
+; cmp OpBtn,15
+; je ClearCarry
+
+; Call DrawAddressingRow
+; Ops btn_num
+; jmp exit007
+; ClearCarry:
+; CLC
+
+;    exit007: 
+;    ret
+; BtnAct Endp
+
 
 send proc near
 ;Check that Transmitter Holding Register is Empty
@@ -3117,6 +3913,51 @@ pusha
 popa
 ret
 receiveReg endp
+
+sendDS proc near
+pusha
+;Check that Transmitter Holding Register is Empty
+        mov cx,54
+        mov si,0
+    DOIT15:
+    AGAIN15:
+        mov dx , 3FDH		; Line Status Register
+        In al , dx 			;Read Line Status
+  		test al , 00100000b
+  		JZ AGAIN15                              ;Not empty
+
+;If empty put the VALUE in Transmit data register
+  	 mov dx , 3F8H ; Transmit data register
+  		mov al,P1_ds[si]
+        out dx , al
+        inc si
+        dec cx
+        jnz DOIT15
+popa
+ret
+sendDS endp
+
+receiveDS proc near
+pusha
+;Check that Data is Ready
+        mov cx,54
+        mov si,0
+	DOIT115:
+    CHK15:	
+        mov dx,3FDH		; Line Status Register
+	    in al,dx 
+  		test al,1
+  		JZ CHK15                                  ;Not Ready
+ ;If Ready read the VALUE in Receive data register
+  	mov dx , 03F8H
+  		 in al , dx
+  	 	 mov P1_ds[si],al
+         inc si
+         dec cx
+         jnz DOIT115  
+popa
+ret
+receiveDS endp
 
 receiveTurn proc near
 pusha
@@ -3263,6 +4104,23 @@ popa
 ret
 sendP1info endp 
 
+sendLvl proc NEAR
+pusha
+;Check that Transmitter Holding Register is Empty
+    AGAIN3333:
+        mov dx , 3FDH		; Line Status Register
+        In al , dx 			;Read Line Status
+  		test al , 00100000b
+  		JZ AGAIN3333                               ;Not empty
+
+;If empty put the VALUE in Transmit data register
+  	    mov dx , 3F8H ; Transmit data register
+  		mov al,Level
+        out dx , al
+popa
+ret
+sendLvl endp 
+
 receivep2info proc near
 pusha
 ;Check that Data is Ready
@@ -3402,5 +4260,24 @@ CheckScroll proc near
 	popa
 ret
 CheckScroll endp
+
+CreateLevelChoiceMenu proc near
+mov point_x,25d
+mov point_y,10d
+SetCursor point_x,point_y
+ShowMessage choose_Level1_message
+;----------------------------------------
+mov point_x,25d
+mov point_y,12d
+SetCursor point_x,point_y
+ShowMessage choose_Level2_message
+;----------------------------------------
+mov point_x,25d
+mov point_y,14d
+SetCursor point_x,point_y
+ShowMessage press_level_choice
+
+ret
+CreateLevelChoiceMenu Endp
 
 end Main

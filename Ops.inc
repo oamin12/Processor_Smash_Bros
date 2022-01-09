@@ -1,5 +1,5 @@
 Ops MACRO btn_num
-
+local EXIT1
 cmp flagpower1_own,1
 jz activate_pw1
 jmp skippw
@@ -370,7 +370,121 @@ mov operand1,CX
 jmp getop2
 
 directaddb:
+Call DrawDSAddress
+mov ah,0ch
+mov al,0
+int 21h
+mov ah,0
+int 16h
+call GetbtnclickedDS
+mov operand1_btn_DS,al
+cmp ax,0ffffh
+jz directaddb 
+cmp ax, 0 
+jz add0_op1  
+cmp ax, 1 
+jz add1_op1 
+cmp ax, 2 
+jz add2_op1
+cmp ax, 3 
+jz add3_op1 
+cmp ax, 4 
+jz add4_op1
+cmp ax, 5 
+jz add5_op1 
+cmp ax, 6 
+jz add6_op1
+cmp ax, 7 
+jz add7_op1 
+cmp ax, 8 
+jz add8_op1
 
+add0_op1: 
+cmp Player_turn,1   ;Player_turn = 1 if it's P1's Player_turn , Player_turn =2 if it's P2's Player_turn
+jz P2_add0_1
+mov Player_num,1
+mov DSAdd,0
+Call GetDataSegmentValue  ;Now we got address 0 in cl and address 1 in ch
+mov operand1,CX
+jmp getop2
+P2_add0_1:
+mov Player_num,2
+mov DSAdd,0
+Call GetDataSegmentValue   ;Now we got address 0 in cl and address 1 in ch
+mov operand1,CX
+jmp getop2
+
+add1_op1:
+jmp add0_op1
+
+add2_op1: 
+cmp Player_turn,1   ;Player_turn = 1 if it's P1's Player_turn , Player_turn =2 if it's P2's Player_turn
+jz P2_add2_1
+mov Player_num,1
+mov DSAdd,2
+Call GetDataSegmentValue   ;Now we got address 2 in cl and address 3 in ch
+mov operand1,CX
+jmp getop2
+P2_add2_1:
+mov Player_num,2
+mov DSAdd,2
+Call GetDataSegmentValue   ;Now we got address 2 in cl and address 3 in ch
+mov operand1,CX
+jmp getop2
+
+add3_op1:
+jmp add2_op1
+
+add4_op1: 
+cmp Player_turn,1   ;Player_turn = 1 if it's P1's Player_turn , Player_turn =2 if it's P2's Player_turn
+jz P2_add4_1
+mov Player_num,1
+mov DSAdd,4
+Call GetDataSegmentValue   ;Now we got address 4 in cl and address 5 in ch
+mov operand1,CX
+jmp getop2
+P2_add4_1:
+mov Player_num,2
+mov DSAdd,4
+Call GetDataSegmentValue   ;Now we got address 4 in cl and address 5 in ch
+mov operand1,CX
+jmp getop2
+
+add5_op1:
+jmp add4_op1
+
+add6_op1: 
+cmp Player_turn,1   ;Player_turn = 1 if it's P1's Player_turn , Player_turn =2 if it's P2's Player_turn
+jz P2_add6_1
+mov Player_num,1
+mov DSAdd,6
+Call GetDataSegmentValue   ;Now we got address 6 in cl and address 7 in ch
+mov operand1,CX
+jmp getop2
+P2_add6_1:
+mov Player_num,2
+mov DSAdd,6
+Call GetDataSegmentValue   ;Now we got address 6 in cl and address 7 in ch
+mov operand1,CX
+jmp getop2
+
+add7_op1:
+jmp add6_op1
+
+add8_op1: 
+cmp Player_turn,1   ;Player_turn = 1 if it's P1's Player_turn , Player_turn =2 if it's P2's Player_turn
+jz P2_add8_1
+mov Player_num,1
+mov DSAdd,8
+Call GetDataSegmentValue   ;Now we got address 8 in cl and address 0 in ch (wrap around)
+mov operand1,CX
+jmp getop2
+P2_add8_1:
+mov Player_num,2
+mov DSAdd,8
+Call GetDataSegmentValue   ;Now we got address 8 in cl and address 0 in ch (wrap around)
+mov operand1,CX
+jmp getop2
 
 
 getop2:
@@ -386,6 +500,7 @@ getop2:
         jz skipp
         cmp OpBtn,17   ;;No operand2 for IMUL
         jz skipp
+        Call DrawAddressingRow
         mov ah,0ch
         mov al,0
         int 21h
@@ -429,8 +544,8 @@ getop2:
         jz dlb2
         cmp ax, 16
         jz immediateaddb2
-        ; cmp ax, 17  
-        ; jz directaddb2
+        cmp ax, 17  
+        jz directaddb2
         ; cmp ax, 18
         ; jz indirectregb2
         ; cmp ax, 19
@@ -770,6 +885,126 @@ mov cx,ReadUserSTR_frbdn_Size
 add cmndStringLength,CX
 mov CX,tempFrbd
 mov operand2,cx
+jmp skipp
+
+directaddb2:
+Call DrawDSAddress
+mov ah,0ch
+mov al,0
+int 21h
+mov ah,0
+int 16h
+call GetbtnclickedDS
+mov operand2_btn_DS,al
+cmp ax,0ffffh
+jz directaddb2 
+cmp ax, 0 
+jz add0_op2 
+cmp ax, 1
+jz add1_op2 
+cmp ax, 2 
+jz add2_op2
+cmp ax, 3
+jz add3_op2 
+cmp ax, 4 
+jz add4_op2
+cmp ax, 5
+jz add5_op2 
+cmp ax, 6 
+jz add6_op2
+cmp ax, 7
+jz add7_op2 
+cmp ax, 8 
+jz add8_op2
+
+add0_op2: 
+cmp Player_turn,1   ;Player_turn = 1 if it's P1's Player_turn , Player_turn =2 if it's P2's Player_turn
+jz P2_add0_2
+mov Player_num,1
+mov DSAdd,0
+Call GetDataSegmentValue   ;Now we got address 0 in cl and address 1 in ch
+mov operand2,CX
+jmp skipp
+P2_add0_2:
+mov Player_num,2
+mov DSAdd,0
+Call GetDataSegmentValue   ;Now we got address 0 in cl and address 1 in ch
+mov operand2,CX
+jmp skipp
+
+add1_op2:
+jmp add0_op2
+
+add2_op2: 
+cmp Player_turn,1   ;Player_turn = 1 if it's P1's Player_turn , Player_turn =2 if it's P2's Player_turn
+jz P2_add2_2
+mov Player_num,1
+mov DSAdd,2
+Call GetDataSegmentValue   ;Now we got address 2 in cl and address 3 in ch
+mov operand2,CX
+jmp skipp
+P2_add2_2:
+mov Player_num,2
+mov DSAdd,2
+Call GetDataSegmentValue   ;Now we got address 2 in cl and address 3 in ch
+mov operand2,CX
+jmp skipp
+
+add3_op2:
+jmp add2_op2
+
+add4_op2: 
+cmp Player_turn,1   ;Player_turn = 1 if it's P1's Player_turn , Player_turn =2 if it's P2's Player_turn
+jz P2_add4_2
+mov Player_num,1
+mov DSAdd,4
+Call GetDataSegmentValue   ;Now we got address 4 in cl and address 5 in ch
+mov operand2,CX
+jmp skipp
+P2_add4_2:
+mov Player_num,2
+mov DSAdd,4
+Call GetDataSegmentValue   ;Now we got address 4 in cl and address 5 in ch
+mov operand2,CX
+jmp skipp
+
+add5_op2:
+jmp add4_op2
+
+add6_op2: 
+cmp Player_turn,1   ;Player_turn = 1 if it's P1's Player_turn , Player_turn =2 if it's P2's Player_turn
+jz P2_add6_2
+mov Player_num,1
+mov DSAdd,6
+Call GetDataSegmentValue   ;Now we got address 6 in cl and address 7 in ch
+mov operand2,CX
+jmp skipp
+P2_add6_2:
+mov Player_num,2
+mov DSAdd,6
+Call GetDataSegmentValue   ;Now we got address 6 in cl and address 7 in ch
+mov operand2,CX
+jmp skipp
+
+add7_op2:
+jmp add6_op2
+
+add8_op2: 
+cmp Player_turn,1   ;Player_turn = 1 if it's P1's Player_turn , Player_turn =2 if it's P2's Player_turn
+jz P2_add8_2
+mov Player_num,1
+mov DSAdd,8
+Call GetDataSegmentValue   ;Now we got address 8 in cl and address 0 in ch (wrap around)
+mov operand2,CX
+jmp skipp
+P2_add8_2:
+mov Player_num,2
+mov DSAdd,8
+Call GetDataSegmentValue   ;Now we got address 8 in cl and address 0 in ch (wrap around)
+mov operand2,CX
+jmp skipp
+
+
 
 ; cmp Player_turn,1
 ; jz chckpw4p1
@@ -828,7 +1063,7 @@ jz LRot
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;---------------------------------------------------Addition----------------------------------------------------
 Addition:
 mov bp,cmndStringLength
 mov SI,offset Ladd
@@ -839,6 +1074,15 @@ rep MOVSB
 add cmndStringLength,3
 
 ;Addition Validations ;; RegIndirect, direct addressing should be handled as well !!
+cmp operand1_btn,17    ;Memory to memory error
+jae chk_Op2_not_memory     
+jmp skipMemoryErr
+chk_Op2_not_memory:
+cmp operand2_btn,17    
+jae Errors
+jmp skipE      ; leha lazma mahdsh yms7ha lw kamel mn gherha momkn ynot fel Errors
+
+skipMemoryErr:
 cmp operand1_btn,7
 jbe chk_not_8bits
 jmp chk_not_16bits
@@ -861,9 +1105,76 @@ AddFr:
 cmp frbdncharflg,1
 je Exit1
 
+cmp operand1_btn,17
+jae chk_byte_word
+jmp check_when_op2IS_Add
+chk_byte_word:
+cmp operand2_btn,7
+jbe take_word
+mov modeDS,2     ;needed to update DS
+cmp operand2_btn,16
+jz chk_value
+take_byte:
+mov al,operand1_btn_DS
+mov ah,0
+mov dl,2
+div dl    ;Decide what to take ch or cl by checking operand1_btn_DS is even or odd
+cmp ah,0
+je take_clOnly
+jmp take_chOnly
+take_clOnly:
+mov ax,operand1
+mov ah,0
+mov bx,operand2
+jmp do_add
+take_chOnly:
+mov ax,operand1 
+mov al,ah   ;swap to take ch only from the operand , note: if mov al,0 this will not work properly
+mov ah,0
+mov bx,operand2
+jmp do_add
+
+chk_value:
+cmp operand2,00FFH
+jbe take_byte
+jmp take_word
+
+check_when_op2IS_Add:
+cmp operand2_btn,17
+jae chk_byte_word1
+jmp take_word
+chk_byte_word1:
+cmp operand1_btn,7
+jbe take_word
+take_byte1:
+mov al,operand2_btn_DS
+mov ah,0
+mov dl,2
+div dl    ;Decide what to take ch or cl by checking operand2_btn_DS is even or odd
+cmp ah,0
+je take_clOnly1
+jmp take_chOnly1
+take_clOnly1:
+mov ax,operand2
+mov ah,0
+mov bx,operand1
+jmp do_add
+take_chOnly1:
+mov ax,operand2 
+mov al,ah   ;swap to take ch only from the operand , note: if mov al,0 this will not work properly
+mov ah,0
+mov bx,operand1
+jmp do_add
+
+
+take_word:
 mov ax,operand1
 mov bx,operand2
+mov modeDS,1   ;needed for updating DS
+
+do_add:
 add ax,bx
+mov temp_DS,ax  ;;;-
 cmp Player_turn,1
 je changein2
 jmp changein1
@@ -1756,6 +2067,8 @@ jz RolFr
 changein2:
 cmp flagpower2_ownandopponent,1
 jz change_both
+cmp operand1_btn,17
+jae updateDS
 mov bh,operand1_btn
 mov reg_num,bh
 mov p_num,2h
@@ -1764,6 +2077,8 @@ jmp Exit1
 changein1:
 cmp flagpower2_ownandopponent,1
 jz change_both
+cmp operand1_btn,17
+jae updateDS
 mov bh,operand1_btn
 mov reg_num,bh
 mov p_num,1h
@@ -1772,6 +2087,17 @@ jmp Exit1
 
 
 change_both:
+cmp operand1_btn,17
+jae updateBoth_DS
+jmp updateBoth_Reg
+updateBoth_DS:
+mov ax,temp_DS
+mov Player_num,1h
+Call UpdateDataSegmentValue
+mov Player_num,2h
+Call UpdateDataSegmentValue
+jmp Exit1
+updateBoth_Reg:
 mov tempPW,ax
 mov bh,operand1_btn
 mov reg_num,bh 
@@ -1782,6 +2108,20 @@ mov bh,operand1_btn
 mov reg_num,bh
 mov p_num,2h
 call UpdateRegValue
+jmp Exit1
+
+
+
+updateDS:
+mov ax,temp_DS
+cmp Player_turn,1
+je changein2_DS
+mov Player_num,1h
+Call UpdateDataSegmentValue
+jmp Exit1
+changein2_DS:
+mov Player_num,2h
+Call UpdateDataSegmentValue
 jmp Exit1
 
 
